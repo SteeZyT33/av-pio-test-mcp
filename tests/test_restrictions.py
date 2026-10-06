@@ -33,10 +33,12 @@ class RestrictionTests(unittest.TestCase):
     def test_native_fails_closed_without_supported_identity(self):
         class NoVsCalls:
             def __getattr__(self, _name):
+                if _name.startswith('AVPIOTest'):
+                    raise AttributeError(_name)
                 raise AssertionError('Native document must not be touched')
         engine = Engine(self.f.root, VwAdapter(NoVsCalls()))
         result = engine.execute('test_arm', {'drawing': 'disposable.vwx'})
-        self.assertEqual(result['code'], 'NATIVE_DOCUMENT_LIFETIME_UNAVAILABLE')
+        self.assertEqual(result['code'], 'NATIVE_OBSERVER_UNAVAILABLE')
         self.assertIsNone(engine.auth.session)
 
     def test_every_document_command_requires_arming(self):

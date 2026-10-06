@@ -8,9 +8,12 @@ locally created definitions. Keep all evidence free of production drawings/code.
 
 ## Required source work before enabling native operations
 
-`pio_test/vw_adapter.py:NativeProof` intentionally raises errors. Implement and
-review the following through supported VW2026 APIs; do not remove the gates or
-add configuration switches to bypass them. None of these APIs is invented here.
+The narrow Post adapter is implemented in `pio_test/native_proof.py`; its
+separate internal SDK observer has compiled offline. This does not complete the
+matrix below. Review [the Post contract](NATIVE_POST_ADAPTER.md), then verify
+native notification delivery, menu nesting, reset/child freshness and coordinates
+before accepting that milestone. Callout, transformations and automatic pumping
+remain unsupported. Never bypass evidence with configuration switches.
 
 | Gate | Required evidence / implementation |
 | --- | --- |

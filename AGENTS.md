@@ -10,8 +10,9 @@ installers, callbacks, presets or live-document resources.
   boundary is `pio_test/engine.py`; schemas are in `pio_test/schema.py`.
 - Document path plus native runtime lifetime/generation must be proven before
   any operation. Markers, handles, filenames and UUIDs alone are insufficient.
-- `NativeProof` is intentionally unavailable. Do not replace it with an
-  operator checkbox, fake `vs`, basename check or optimistic reset completion.
+- `NativeProof` requires the fixed native observer ABI and a supervised menu
+  scope. Never replace evidence with a checkbox, fake `vs`, basename check or
+  optimistic reset completion. Native acceptance remains pending.
 - All VW mutations belong in VW's own Python MENU-COMMAND runner, initiated
   manually. Native notifications may only invalidate identity. No automatic
   clicks, timers, raw Python-engine execution, sockets, or dialog dismissal.

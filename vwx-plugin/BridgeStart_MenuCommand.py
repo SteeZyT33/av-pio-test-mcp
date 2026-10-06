@@ -1,6 +1,8 @@
 # REVIEW TEMPLATE ONLY. Do not run until the native integration gates are met.
 # Paste into a USER-CREATED Python MENU COMMAND in VW2026, not Run Script,
 # OnIdle, a timer, a web palette or a native raw Python-engine callback.
+# Exact name: AV PIO Test Pump. Invoke through the separately reviewed SDK
+# AV PIO Test Supervisor menu; direct invocation fails native scope verification.
 # Edit only these two local literals. Never accept paths from an MCP payload.
 import sys
 

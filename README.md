@@ -1,16 +1,18 @@
-# AV PIO test-only MCP — draft, native arming blocked
+# AV PIO test-only MCP — draft, native acceptance pending
 
 Restricted local test harness for **Vectorworks 2026 / Windows 11**, forked from
 vicquick/vwx-mcp at `0a2f554a15ddddf0d43dc9d251d90a42146c9363`. MIT attribution is
 retained in [LICENSE](LICENSE). No company drawing or AV PIO implementation is included.
 
-**This draft is not ready for live PIO testing.** The stdio server, authenticated
-IPC, schemas, authorization and test operations are implemented and exercised
-offline. `NativeProof` deliberately rejects native arming until full-path/runtime
-document identity, completed regeneration, typed VW field conversion and Linear
-PIO creation and owned-child geometry/text metrics are implemented through supported VW2026 APIs and verified locally.
-The portable C++ lifecycle model is not an SDK plugin. No native binary is built
-or deployed. See [the acceptance gates](docs/NATIVE_ACCEPTANCE.md).
+**This draft has not passed live PIO acceptance.** The Post adapter now implements
+typed native fields, Point creation, bounded flat geometry/text inspection, and
+reset submission followed by confirmation in a later supervised menu invocation.
+It requires a separate SDK observer; missing functions or an unverified native
+menu scope reject before document access. An internal observer was built locally
+against the pinned official SDK2026; its SDK-dependent source and binaries remain
+private under the SDK license. Nothing has been installed or connected to VW.
+See [the Post contract](docs/NATIVE_POST_ADAPTER.md) and
+[the acceptance gates](docs/NATIVE_ACCEPTANCE.md).
 
 ## What changed
 
@@ -22,10 +24,10 @@ retains their original source. The replacement has ten fixed tools:
 | Tools | Scope |
 | --- | --- |
 | `test_status`, `test_arm`, `test_disarm` | Status and explicit ephemeral test authority |
-| `test_create` | AV Post or Linear AV Callout only |
-| `test_read`, `test_set_parameters`, `test_regenerate` | Owned fields plus bounded child geometry/text metrics; completed regeneration/readback |
-| `test_transform` | Bounded move/rotate/mirror in place |
-| `test_case` | Three fixed cases, maximum 100 object-iterations |
+| `test_create` | Native milestone: AV Post at origin zero, rotation zero; Linear AV Callout explicitly unsupported |
+| `test_read`, `test_set_parameters`, `test_regenerate` | Owned fields and flat child metrics; mutation returns pending, later read confirms current fresh children |
+| `test_transform` | Schema bounded; native transforms await calibration and reject before mutation |
+| `test_case` | Schema bounded; native multi-reset cases await continuations and reject before mutation |
 | `test_cleanup` | Explicit list of at most 25 session-created UUIDs |
 
 AV Beam and AV Beam Tool are rejected at both entry and in-VW boundaries.
@@ -59,6 +61,8 @@ empty. Run from the checkout:
 python -m unittest discover -v
 g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_document_lifetime.cpp -o /tmp/av-pio-lifetime-test
 /tmp/av-pio-lifetime-test
+g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_menu_lifecycle.cpp -o /tmp/av-pio-menu-test
+/tmp/av-pio-menu-test
 git diff --check
 ```
 
@@ -70,6 +74,7 @@ No VM is required for subsequent local acceptance on the undeployed VW2026 insta
 - [Protocol and lifecycle](docs/ARCHITECTURE.md)
 - [Dependency/deployment manifest and explicit removal steps](docs/DEPLOYMENT.md)
 - [Local native matrix and remaining implementation](docs/NATIVE_ACCEPTANCE.md)
+- [Supervised Post adapter and fixed native ABI](docs/NATIVE_POST_ADAPTER.md)
 - [Recorded offline results](docs/CHECKS.md)
 
 Do not install an old VwxBridge binary alongside this harness. This code does

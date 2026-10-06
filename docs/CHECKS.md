@@ -33,7 +33,7 @@ preparation; and disabled legacy execution paths.
 These tests use record stores, synthetic geometry and fake lifecycle/completion
 signals. They do not recreate the private PIO implementation, establish native
 stability, prove menu context/scheduling, measure native performance, or establish
-correct geometry/text/grips. NativeProof is intentionally unavailable. The local
+correct geometry/text/grips. NativeProof was unavailable in that cloud baseline. The local
 implementation and acceptance blockers are listed in NATIVE_ACCEPTANCE.md and STATUS.md.
 
 
@@ -66,3 +66,25 @@ Validation provenance:
   behavior beyond that reported trial, full Windows enumeration, and real
   VW2026/native/SDK behavior remain local validation work. No runtime permission
   check or native failure gate was weakened to obtain a test pass.
+
+## Local native Post adapter verification (2026-10-06)
+
+On `codex/native-post-adapter`, based on `f0444e5`, the Windows local agent ran
+the complete suite with CPython 3.12.7: **88 run, 87 passed, 1 POSIX-only skip**.
+This includes the real Windows junction check, native ABI/codec/flat-text contract
+tests and an isolated offline stdio enumeration subprocess. Every disposable
+fixture was contained under a dedicated temporary test directory; cleanup checked
+that its resolved target stayed inside that directory. No Vectorworks connection
+was used. Runtime files also parse under Python 3.9 grammar.
+
+Both `native/test_document_lifetime.cpp` and `native/test_menu_lifecycle.cpp`
+compiled and ran under MSVC v143 with C++17, `/W4 /WX`, and assertions enabled.
+The separately maintained private observer compiled as x64 against the pinned
+official SDK2026, using MSVC 14.44.35207 and Windows SDK 10.0.22621.0. Build output
+and exact source/library/resource hashes are retained privately. No SDK files,
+native artifacts, private PIO code, drawing, credentials or local configuration
+are committed here. No observer install/load or native acceptance occurred.
+
+Synthetic host-contract tests prove rejection and two-phase response behavior;
+they do not prove SDK callback delivery, nested menu execution, native regeneration,
+geometry semantics, performance or grip behavior. Those remain explicit live gates.

@@ -13,7 +13,7 @@ not a claim that this draft is deployable today.
 | VW Python menu template | Vendor embedded Python (3.9 syntax), vendor `vs`, reviewed checkout; no FastMCP/pip | Fixed IPC files and allowed session-owned PIO operations, once native gates exist |
 | Windows path/DACL validation | Windows system `kernel32`/`advapi32` via stdlib ctypes | None |
 | Offline tests | CPython stdlib unittest; C++17 compiler for policy test | Temporary disposable mock files and portable test executable |
-| Native runtime plugin | **None provided or buildable in this draft** | None |
+| Native runtime plugin | Internal SDK2026 observer built separately; source/license/build review and live acceptance required; no SDK artifact supplied publicly | No deployment performed |
 | Lock | `requirements.lock` = complete empty third-party closure | No downloads |
 
 Cloud checks used CPython 3.12.14 and GCC 13.3.0 on Linux. Record exact Windows
@@ -68,6 +68,14 @@ variables. Initially only MCP enumeration is meaningful without a pump. Do not
 connect it to real VW until the native implementation and acceptance gates pass.
 
 ## Local menu/fixture setup after gate implementation and review
+
+For the first native Post milestone, follow [NATIVE_POST_ADAPTER.md](NATIVE_POST_ADAPTER.md).
+The SDK **AV PIO Test Supervisor** menu must invoke the fixed Python
+**AV PIO Test Pump** command. Direct invocation of the Python pump fails the
+native scope check. The following general preparation steps alone cannot enable
+this adapter. Native plugin credentials or operator enablement are an additional
+VW2026 prerequisite; this repository does not forge credentials or change security
+settings. Review the internal source/build manifest before installing anything.
 
 1. The user creates/maintains **AV Post and AV Callout native definitions locally**
    with the existing private AV bootstrap/hot reload. Nothing here installs,
