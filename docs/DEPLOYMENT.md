@@ -100,7 +100,9 @@ through local Enable before any pump. A reconnect never enables or arms.
 4. Run the menu once to initialize the bridge descriptor, then request
    `test_arm` for e.g. `disposable.vwx` and manually run the menu again. Each
    subsequent queued job needs one manual invocation before its TTL expires.
-   Client default is 30 seconds, requests can never exceed 60 seconds.
+   Client default is 60 seconds, and requests can never exceed 60 seconds.
+   Prompt the operator immediately after queuing the request so they have the
+   full manual window. Expiry does not authorize an automatic retry.
 5. Keep all test-created PIOs on the synthetic layer. Scale/class experiments are
    manual and must be observed by the native proof. No broad document queries,
    hidden saves, selections, production modeling or PIO definitions are exposed.

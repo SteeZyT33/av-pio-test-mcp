@@ -1,5 +1,23 @@
 # Offline verification record
 
+## Manual request window follow-up (2026-10-06)
+
+The external Client now defaults to a 60-second request window, matching the
+existing wire maximum. On Windows CPython 3.12.7, all **19 transport tests**
+passed, including the two new checks: an actual signed default request validates
+just before 60 seconds and expires just after it; invalid/nonfinite timeouts and
+timeouts above 60 seconds remain rejected. The Python 3.9 grammar/source-boundary
+check also passed. Tests use disposable offline fixtures and do not wait a real
+minute or dispatch any native operation. Native Pump/menu/gates, installed files,
+claim rules and no-retry behavior are unchanged.
+
+Separate follow-up: `VwAdapter.blockers` remains a static list containing
+`NATIVE_OBSERVER_REQUIRED`, even when a local native gate reports READY. This
+list is not a dynamic observer probe. Its reporting needs separate review;
+this timing correction does not remove blockers or claim native acceptance.
+
+## Earlier verification provenance
+
 Date: 2026-10-06. Fork base: `0a2f554a15ddddf0d43dc9d251d90a42146c9363`.
 Environment: Linux, CPython 3.12.14, GCC 13.3.0. No Vectorworks/SDK or private AV
 PIO code was available. No installation, live MCP connection or native plugin

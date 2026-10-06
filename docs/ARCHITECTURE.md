@@ -57,7 +57,7 @@ Canonical JSON is signed with HMAC-SHA256. Kind-specific exact field sets and
 MAC domains distinguish descriptors, requests, results and uncertainty records.
 Both ends verify response/request authentication and bridge/correlation/sequence
 binding. Requests also bind session/document fingerprint, issue time and expiry
-(at most 60 seconds; client default 30). Duplicated JSON keys, NaN/Infinity,
+(at most 60 seconds; client default 60). Duplicated JSON keys, NaN/Infinity,
 unknown fields and invalid types are rejected. No prefix/getattr command dispatch.
 
 The in-VW pump claims one fixed request slot by rename. Before executing it,

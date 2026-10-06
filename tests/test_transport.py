@@ -4,6 +4,7 @@ import secrets
 import time
 import unittest
 import uuid
+from unittest.mock import patch
 
 from pio_test.errors import Rejected
 from pio_test.transport import Client, Pump
@@ -50,6 +51,30 @@ class TransportTests(unittest.TestCase):
         created = client_call_with_pump(client, self.pump, 'test_create', POST_CREATE)
         self.assertTrue(created['ok'])
         self.assertEqual(len(self.f.adapter.objects), 1)
+
+    def test_default_manual_window_is_wire_valid_and_expires_at_60_seconds(self):
+        client = Client(self.f.config, self.f.key)
+        # Advance only the external wait clock; retain the actual signed request.
+        # No native pump executes and this test does not wait a real minute.
+        with patch('pio_test.transport.time.monotonic', side_effect=[100, 160]):
+            result = client.call('test_status', {})
+        self.assertEqual(result['code'], 'AMBIGUOUS_TIMEOUT')
+        message = loads(read_bytes(self.f.ipc, 'request.json'))
+        self.assertEqual(message['expires'] - message['issued'], 60)
+        job = request(self.f.key, message, self.pump.bridge, self.pump.sequence,
+                      now=message['issued'] + 59.999)
+        self.assertEqual(job['command'], 'test_status')
+        with self.assertRaisesRegex(Rejected, 'STALE_JOB'):
+            request(self.f.key, message, self.pump.bridge, self.pump.sequence,
+                    now=message['issued'] + 60.001)
+        self.assertEqual(self.f.adapter.mutations, 0)
+
+    def test_client_timeout_remains_bounded_to_60_seconds(self):
+        for timeout in (0, -1, 60.001, float('inf'), float('nan'), True, '60'):
+            with self.subTest(timeout=timeout):
+                with self.assertRaisesRegex(Rejected, 'INVALID_TIMEOUT'):
+                    Client(self.f.config, self.f.key, timeout=timeout)
+        self.assertEqual(Client(self.f.config, self.f.key, timeout=60).timeout, 60)
 
     def test_wrong_auth_never_dispatches(self):
         self.arm()

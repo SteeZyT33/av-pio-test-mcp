@@ -106,7 +106,7 @@ class Pump:
 
 
 class Client:
-    def __init__(self, config, key, timeout=30):
+    def __init__(self, config, key, timeout=60):
         require(type(timeout) in (int, float) and 0 < timeout <= 60, 'INVALID_TIMEOUT')
         self.root, self.key, self.timeout = config['ipc_root'], key, timeout
         self.bridge = self.session = self.binding = None
