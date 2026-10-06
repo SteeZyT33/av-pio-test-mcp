@@ -1,0 +1,11 @@
+{
+  "title": "AV PIO Test Supervisor",
+  "category": "AV PIO Test Development",
+  "help": "Manually process one restricted job through the Python menu command.",
+  "enable": "Enable PIO Testing",
+  "disable": "Disable PIO Testing",
+  "status": "PIO Testing Status",
+  "enable_help": "Make local testing ready; an exact scratch drawing still needs explicit arm.",
+  "disable_help": "Revoke testing authority and queued jobs without deleting objects; wait for any executing operation.",
+  "status_help": "Show OFF, READY, ARMED, BUSY or UNCONFIRMED for local PIO testing."
+}
