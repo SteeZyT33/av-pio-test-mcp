@@ -29,3 +29,11 @@ Start local follow-up at `docs/NATIVE_ACCEPTANCE.md`. In particular, do not repl
 NativeProof with a flag acknowledging risk: it must implement actual supported
 runtime evidence. If a supported completion/scheduling/lifetime mechanism cannot
 be established, leave the corresponding operation blocked and report it.
+
+
+The local agent “Stand by for directions” now owns native adapter/SDK
+implementation on the separate `codex/native-post-adapter` branch. This cloud
+follow-up changes only test fixtures and documentation on `codex/pio-testing-only`;
+it does not duplicate or incorporate that native work. Native failure gates
+remain in place until actual supported implementation and calibration. The
+Windows reviewer trial and complete Linux rerun are distinguished in CHECKS.md.

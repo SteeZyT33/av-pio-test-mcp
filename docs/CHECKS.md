@@ -7,7 +7,7 @@ build/deployment was performed.
 
 | Command/check | Result |
 | --- | --- |
-| `python -m unittest discover -v` | 70 tests run: **69 passed, 1 skipped**, 0 failures/errors; 0.514 s on the recorded final run |
+| `python -m unittest discover -v` | 70 tests run: **69 passed, 1 skipped**, 0 failures/errors; 1.439 s on the recorded test-fixture follow-up run |
 | Python 3.9 grammar gate in `SourceBoundaryTests` | Passed for all supported runtime/menu/entrypoint Python modules; not an execution test on VW's embedded Python |
 | Real subprocess stdio handshake/tools/resources check | Passed under legacy HTTP/TCP/full-toolset/telemetry environment variables; exactly 10 tools, empty resource/template/prompt lists |
 | `g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_document_lifetime.cpp -o /tmp/av-pio-lifetime-test` | Compiled successfully with exit 0 |
@@ -35,3 +35,34 @@ signals. They do not recreate the private PIO implementation, establish native
 stability, prove menu context/scheduling, measure native performance, or establish
 correct geometry/text/grips. NativeProof is intentionally unavailable. The local
 implementation and acceptance blockers are listed in NATIVE_ACCEPTANCE.md and STATUS.md.
+
+
+## Windows test-fixture review follow-up
+
+The independent local reviewer found that Python 3.12 `mkdir(0700)` can leave
+explicit Administrators (`S-1-5-32-544`) and OWNER RIGHTS (`S-1-3-4`) grants on
+new fixture directories. Removing inheritance and granting the current SID and
+SYSTEM did not remove those explicit grants. `tests/support.py` now removes
+those two grants, without recursion, only from freshly created disposable
+fixture directories after granting the current SID and SYSTEM. Runtime ACL
+validation and permissions are unchanged.
+
+The claimed-mutation timeout test now arms with a 1-second budget, then uses a
+0.5-second mutation budget and a 1-second fake create delay. This keeps Windows
+permission-validation time out of the intended mutation-timeout scenario. The
+ambiguous-timeout, exactly-one-mutation and no-retry assertions are unchanged.
+The separate deliberately unclaimed-expiry test retains its original timing.
+
+Validation provenance:
+
+- Complete suite rerun in this Linux environment: **70 run, 69 passed, 1 Windows
+  junction test skipped**, including all MCP enumeration/subprocess exposure
+  tests. Full output above is refreshed for this run.
+- User-relayed independent **private Windows trial** of the two fixes: **63
+  selected tests, 62 passed, 1 POSIX-only skip**. The local agent did **not** run
+  enumeration tests. This report was not independently reproduced on Windows
+  here and must not be described as a complete Windows-suite pass.
+- The new `icacls /remove:g` execution path cannot run on Linux. Windows fixture
+  behavior beyond that reported trial, full Windows enumeration, and real
+  VW2026/native/SDK behavior remain local validation work. No runtime permission
+  check or native failure gate was weakened to obtain a test pass.

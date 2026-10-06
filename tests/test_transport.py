@@ -137,9 +137,12 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(self.f.adapter.mutations, 0)
 
     def test_timeout_claimed_job_never_duplicates_native_mutation(self):
-        client = Client(self.f.config, self.f.key, timeout=0.04)
+        # Let Windows ACL validation finish while arming; exercise the timeout
+        # during the fake mutation, not during the prerequisite arm operation.
+        client = Client(self.f.config, self.f.key, timeout=1)
         self.assertTrue(client_call_with_pump(client, self.pump, 'test_arm', {'drawing': 'disposable.vwx'})['ok'])
-        self.f.adapter.create_delay = 0.08
+        client.timeout = 0.5
+        self.f.adapter.create_delay = 1
         result = client_call_with_pump(client, self.pump, 'test_create', POST_CREATE)
         self.assertEqual(result['code'], 'AMBIGUOUS_TIMEOUT')
         self.assertEqual(self.f.adapter.mutations, 1)

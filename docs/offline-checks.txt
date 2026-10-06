@@ -70,6 +70,6 @@ test_wrong_auth_never_dispatches (tests.test_transport.TransportTests.test_wrong
 test_wrong_bridge_session_and_document (tests.test_transport.TransportTests.test_wrong_bridge_session_and_document) ... ok
 
 ----------------------------------------------------------------------
-Ran 70 tests in 0.514s
+Ran 70 tests in 1.439s
 
 OK (skipped=1)

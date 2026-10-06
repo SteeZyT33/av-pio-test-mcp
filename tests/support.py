@@ -137,6 +137,13 @@ class Fixture:
         subprocess.run(['icacls', str(path), '/inheritance:r', '/grant:r',
                         '*' + sid + ':(OI)(CI)F', '*S-1-5-18:(OI)(CI)F'],
                        check=True, capture_output=True)
+        # Python 3.12 mkdir(0700) can add explicit Administrators and OWNER
+        # RIGHTS grants. Removing inheritance does not remove those grants.
+        # Narrow only this freshly created fixture directory, without recursion;
+        # keep the current SID and SYSTEM grants installed above.
+        subprocess.run(['icacls', str(path), '/remove:g',
+                        '*S-1-5-32-544', '*S-1-3-4'],
+                       check=True, capture_output=True)
 
     def write(self, name, value):
         path = self.ipc / name
