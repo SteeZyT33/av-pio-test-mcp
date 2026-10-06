@@ -1,0 +1,333 @@
+[
+  {
+    "file": ".gitignore",
+    "bytes": 128,
+    "sha256": "4e6e18e0c5c7a3230a74193216a24074df7168ec466f0884df6baffc1ef6e21d",
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "AGENTS.md",
+    "bytes": 18962,
+    "sha256": "717ab784af1028590c7d529e8ec2cb79b41c3bc5421423fb19177a5f67e71012",
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "LICENSE",
+    "bytes": 1065,
+    "sha256": "d782357c4a1559b44bc9353a649a6777d436078bab4ef5d9c640a5553ed7d887",
+    "disposition": "preserved unchanged (MIT attribution)"
+  },
+  {
+    "file": "README.md",
+    "bytes": 8358,
+    "sha256": "e7c8431b0c3135887572943c6b22c388be0d295b492b76d2e0ec511e40c781db",
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "bridge/deploy_native_bridge.bat",
+    "bytes": 3666,
+    "sha256": "fc9127dceaff65de44edb4cd48d22d3449497cc600a57b3e775ca3801f29e9ea",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "bridge/vwx-mcp.bat",
+    "bytes": 998,
+    "sha256": "2b6a9b9fa49dd437acf3784c7c39c18eb190c95380239731f90aa7a77d8cfa92",
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "docs/ARCHITECTURE.md",
+    "bytes": 8443,
+    "sha256": "107bd0973dd2a512a930801af2c122c07daeedd63ec009219db543dc50f6dcd7",
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "docs/MIGRATION_fastmcp3.md",
+    "bytes": 5786,
+    "sha256": "4bb507a7bc167fa0e636bbb2765116de1fdaa21e920a3de5423e5097be7993f7",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "docs/PLUGIN_CREDENTIALS.md",
+    "bytes": 4227,
+    "sha256": "00113fdf4bece698339b83fbab8f72ee16abe6124430aa0c7b41935fc3a662bb",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "docs/ROADMAP.md",
+    "bytes": 55700,
+    "sha256": "0897f9ea200d1e513f81d9c1757fa71cbfc9ce19bec989900ca387c8a75ab57d",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "docs/TOOL_COVERAGE.md",
+    "bytes": 1864,
+    "sha256": "73346cd15995d05d66a1a629ab8b9653c8b530992408278e64165e7bc5a445d5",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "legacy/README.md",
+    "bytes": 1717,
+    "sha256": "1552b928dffc0358905caad0f9da474f6c8f971e68813a1297db427f9adcaf30",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "legacy/vwx_mcp_bridge_dialog.py",
+    "bytes": 12368,
+    "sha256": "6a8cc439dc74dc698b877744e71477de6a4d46fe306c4c795650201d252cae6d",
+    "functions": 8,
+    "imports": [
+      "commands",
+      "os",
+      "vs"
+    ],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "mcp-server/requirements.txt",
+    "bytes": 1697,
+    "sha256": "96bb086ad36c4acfdfbe80a84a127170a637a40e35475a44dba688c787f81ea4",
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "mcp-server/tool_tags.py",
+    "bytes": 12350,
+    "sha256": "dd663dda171d28c5d552f6a46e9cbe04bb4734ebe04f0ee428694c006d42c3cb",
+    "functions": 2,
+    "imports": [],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "mcp-server/vwx_mcp_server.py",
+    "bytes": 162199,
+    "sha256": "7c1aadc457ec8bfe1d6ec4da13b650437e1bbbaced2bb08b8a74bf4e9b42a587",
+    "functions": 326,
+    "imports": [
+      "PIL",
+      "asyncio",
+      "contextlib",
+      "ctypes",
+      "docket",
+      "fastmcp",
+      "fastmcp.server.middleware",
+      "fastmcp.server.middleware.caching",
+      "fastmcp.server.middleware.timing",
+      "fastmcp.tools",
+      "fastmcp.utilities.types",
+      "io",
+      "json",
+      "logging",
+      "mcp.types",
+      "opentelemetry",
+      "opentelemetry.exporter.otlp.proto.http.trace_exporter",
+      "opentelemetry.sdk.trace",
+      "opentelemetry.sdk.trace.export",
+      "os",
+      "socket",
+      "sys",
+      "threading",
+      "time",
+      "tool_tags",
+      "typing",
+      "uuid"
+    ],
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "native/.gitignore",
+    "bytes": 26,
+    "sha256": "29be585ec755ee0b89ecd4e11a097e2ff135d0a44cf69fe55d716aa84560d11e",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/CredentialsVwxMcp.json",
+    "bytes": 207,
+    "sha256": "c52197de3954dd255d88f89f72d0fc8f5b65ca4925cf9997e82369e31291ddf7",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Bridge/VwxBridgePalette.cpp",
+    "bytes": 32162,
+    "sha256": "17f295201f8aec0aa1db6afad55ddcce0706753beffb2f56f482dd441f1b5f75",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Bridge/VwxBridgePalette.h",
+    "bytes": 3181,
+    "sha256": "868a9f823d5420946dc8d7941b1f549b8c16a539368ba1488ac7479a21a1094a",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Module-Info.plist",
+    "bytes": 673,
+    "sha256": "a9039b1548f979ecbe6d34e34c49daf34e5bdd28bd32cbb6179c02ef4606d9d2",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/ModuleMain.cpp",
+    "bytes": 1510,
+    "sha256": "6e1f2212b0fdd396bbbc76c3f2340b1d020cd521cf4ba25e0755f6760cfd4bac",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Prefix/CommonPrefix.h",
+    "bytes": 472,
+    "sha256": "8da0666463c82a9b424f557b921c83e729cf55573136e83217fcff88d9a4d438",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Prefix/DebugPrefix.h",
+    "bytes": 342,
+    "sha256": "017c5dfc8abb878281017c27f4f0606877e40d25705a3d011c905f69aabddb37",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Prefix/ReleasePrefix.h",
+    "bytes": 297,
+    "sha256": "07d930a2c684a48f69077fd282b768227dc7529491d44d1ed5c28fb02b25d370",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Prefix/StdAfx.cpp",
+    "bytes": 277,
+    "sha256": "d407db4e2cafaf73b73344c715f2ae49899607a15ba665a2a02496bfb20c1e70",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/Source/Prefix/StdAfx.h",
+    "bytes": 501,
+    "sha256": "60584243110679b7e4bc1706d51c21f9461edd449c7a720b37013ae13fc719af",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/VwxBridge.vwr/Strings/ExtMenuShowVwxBridge.vwstrings",
+    "bytes": 312,
+    "sha256": "6a891c1a07e7fba713deed8bcf1deda4a1ca325861fa667119e7cbac9a5a8dc3",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/VwxBridge.vwr/Strings/ExtMenuVwxPump.vwstrings",
+    "bytes": 318,
+    "sha256": "df558dcb6eeaddd0513b3d43da0ed7be94c35427a1b0289183d4b1dd711a3d2d",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/VwxBridge.vwr/Strings/ExtVwxBridgePalette.vwstrings",
+    "bytes": 66,
+    "sha256": "a3209efed04735da8c665acb1f798e5d923e5154252f950230755f19a868c414",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/VwxBridge.vwr/html/index.html",
+    "bytes": 1462,
+    "sha256": "1f6d131016ae55efc100491e572716d83538f6b426ff5ab93d9f07e15d38fbc2",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/VwxBridge.vwr/html/main.js",
+    "bytes": 1635,
+    "sha256": "9e39c918bf791b596ddc2074232de4b1f3164d1871fac8c72132e99ff6c8f79a",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "native/VwxBridge2026.vcxproj",
+    "bytes": 5490,
+    "sha256": "1dbf9e05389eac6de1ffdc7f5a8e5143bedbb43b03a3aa72289e393360d7a61f",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "tools/build_vs_index.py",
+    "bytes": 2909,
+    "sha256": "ca347a55562eeee8ed9348baecc6026f024b103cf4568e5320981b636c4b286b",
+    "functions": 2,
+    "imports": [
+      "ast"
+    ],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "tools/pruefe_konsistenz.py",
+    "bytes": 10554,
+    "sha256": "b9e5d2c083178107d1b2b065329fe2d7f99059b1831f36b818c0d1bab0b9c6fd",
+    "functions": 8,
+    "imports": [
+      "ast",
+      "io",
+      "os",
+      "sys"
+    ],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "tools/pruefe_vs_aufrufe.py",
+    "bytes": 3983,
+    "sha256": "2a1df2740568512e958d3c938e5a4c56309cb843a33b9a4dc124985f16ff5048",
+    "functions": 3,
+    "imports": [
+      "ast",
+      "io",
+      "json",
+      "sys"
+    ],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "vwx-plugin/BridgeStart_MenuCommand.py",
+    "bytes": 2561,
+    "sha256": "f4644b9b6014e02ceec2d672ff32224937305db335b5d83655539a53789bcc69",
+    "functions": 0,
+    "imports": [
+      "importlib",
+      "os",
+      "sys",
+      "vwx_pump"
+    ],
+    "disposition": "replaced/restricted for this fork"
+  },
+  {
+    "file": "vwx-plugin/commands.py",
+    "bytes": 299212,
+    "sha256": "2bd4df7862f23c78b90afc838de2171dc3a75402edc137c3ea76360f8c72614f",
+    "functions": 442,
+    "imports": [
+      "collections",
+      "ctypes",
+      "inspect",
+      "io",
+      "json",
+      "math",
+      "os",
+      "vs"
+    ],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "vwx-plugin/vs_index.json",
+    "bytes": 625001,
+    "sha256": "97de286afe6df5e169bdcc31cebd8f802192e77ca611af643da2bbfab9e01afd",
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "vwx-plugin/vwx_mcp_bridge.py",
+    "bytes": 16248,
+    "sha256": "d6f4f09bb0599c10a575b05d3195acf52fea2af1c64bc56506f201b4508a03db",
+    "functions": 10,
+    "imports": [
+      "commands",
+      "os",
+      "vs"
+    ],
+    "disposition": "removed from supported tree; retained in git history"
+  },
+  {
+    "file": "vwx-plugin/vwx_pump.py",
+    "bytes": 11835,
+    "sha256": "b12424fad91c0f92305a53b10450e0f59f4d7f263441664c879682205833bde7",
+    "functions": 13,
+    "imports": [
+      "importlib",
+      "os"
+    ],
+    "disposition": "replaced/restricted for this fork"
+  }
+]

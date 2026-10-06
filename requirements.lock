@@ -1,0 +1,3 @@
+# Complete third-party dependency closure for the supported runtime: EMPTY.
+# Python standard library only. No pip/build/install step is required.
+# See docs/DEPLOYMENT.md for interpreter/SDK trust and local acceptance gates.

@@ -1,145 +1,156 @@
-# vwx-mcp architecture (bridge v13 — native palette, context-split, true background, auto-dismiss)
+# Restricted protocol and lifecycle
 
-```
-Claude Code ──HTTP :8082──▶ vwx_mcp_server.py (cmd window, fastmcp)
-                                 │ writes  ipc/jobs/<ts>-<cid>.json
-                                 │ polls   ipc/results/<cid>.json
-                                 ▼
-   %APPDATA%\…\Plug-ins\VW-MCP\ipc\           (file IPC, same machine)
-                                 ▲
-   Vectorworks (always running): ▼
-   ┌─ VwxBridge.vlb  (native C++ web palette, Program Files\…\Plug-ins) ─┐
-   │  100ms heartbeat timer (palette open = bridge on, closed = off):    │
-   │   • READ jobs  → NotifyLayerChange(magic) → OnIdle StatusProc       │
-   │                  → vwx_pump.pump_readonly()   (true background)     │
-   │   • WRITE jobs → Ctrl+Shift+B accelerator:                          │
-   │       VW foreground → keybd_event (real keystroke)                  │
-   │       VW background → SetKeyboardState (VW's own thread) +          │
-   │                       PostMessage(WM_KEYDOWN) → TranslateAccelerator│
-   └─────────────────────────────────────────────────────────────────────┘
-                                 ▼
-   Python menu command "VWX Bridge Start"  (VW's script-plugin runner)
-        → vwx_pump.pump_all(): claims jobs → commands.py (mtime-gated
-          hot-reload) → writes results → RETURNS
-```
+The external server uses newline-delimited MCP JSON-RPC over stdio (the explicit
+2025-06-18 subset), with ten tools and no resources, prompts, tasks, HTTP server,
+socket bridge, transport fallback, tunneling or telemetry. Legacy environment
+variables cannot expand its exposure. It does not use FastMCP inside or outside VW.
+Client interoperability beyond the exercised handshake still needs a local check.
 
-**No watchdog process. No focus requirement. No crash paths.** The palette
-triggers everything; reads drain even while Vectorworks is unfocused, and
-writes reach VW through its own message queue — posted keys are translated by
-`TranslateAccelerator` regardless of the foreground app, unlike `keybd_event`,
-which injects into the global input stream and only ever reaches the
-foreground app (Win11 refuses background foreground-stealing).
+## Modules and authority
 
-## The VW2026 execution-context map (all verified live, 8 crash tests)
+| Files | Responsibility |
+| --- | --- |
+| `schema.py` | One schema for tool exposure, command allowlist, writable fields, diagnostics and bounds |
+| `wire.py`, `paths.py`, `windows_acl.py`, `transport.py`, `mcp_stdio.py` | Strict parsing, authenticated transport, confinement, stdio |
+| `authorization.py`, `engine.py` | Session binding, native document lifetime and object ownership |
+| `operations.py` | Explicit bounded PIO operations, partial failure, completed-reset readback |
+| `inspection.py` | Bounded traversal of owned PIO descendants, typed geometry/text snapshot |
+| `vw_adapter.py`, `menu.py` | VW API boundary and manual Python menu-command lifecycle |
+| `audit_log.py` | Bounded metadata-only audit log |
 
-| Context | read-only Python | document mutation | open dialog |
-|---|---|---|---|
-| CEF web-palette sync callback (`AddFunctionPromiseSync`) | ✓ | **CRASH** | — |
-| OnIdle notification (`RegisterNotificationProcedure`) | ✓ | **CRASH** | **CRASH** |
-| WM_TIMER + `IPythonScriptEngine::ExecuteScript` | ✓ | parks/hangs | — |
-| native menu `DoInterface` + raw `ExecuteScript` | ✓ | **CRASH** | — |
-| **VW's Python menu-command runner** (script plugin) | ✓ | **✓** | ✓ |
+An arm request carries a relative saved `.vwx` path under an operator-configured
+test root. No drawing is created, opened, activated, saved, imported or exported
+by this interface. Canonical full-path equality is necessary, and insufficient:
+authority also binds a native process/document-lifetime token, invalidation
+generation and runtime synthetic fixture identity. The native observer must
+invalidate on switch-away even if the user switches back before the next pump,
+close/reopen, save-as, undo/redo, listener loss or uncertain lifecycle events.
+The core checks identity on every armed command, including status/read/disarm,
+and before/after individual operation stages. Uncertainty revokes authority.
 
-The SDK hints at all of this: `kNotifyGenericWebPalette` exists because web
-palettes must do heavy work "outside the SyncProxy callback"; the SDK manual
-warns notification handlers to "postpone any significant work"; the
-WebPaletteExample ships its one mutation callback **empty**. Only VW's own
-Python menu-command runner wraps script execution in a full document/undo
-context — so `pump_all()` (mutations) runs there and **nowhere else**. That is
-enforced structurally: no other code path calls it, which is why the bridge
-cannot crash VW even when a trigger misfires (jobs simply stay queued and the
-MCP call times out visibly).
+No drawing marker is currently used. A future marker could identify the intended
+fixture, but must never serve as the lifetime proof: copies preserve markers and
+UUIDs, and native handles can be reused. `native/document_lifetime.hpp` models
+invalidation only; it has no SDK hooks and supplies no evidence about real VW.
+`NativeProof.identity()` therefore fails closed today. Configuration cannot
+turn that failure into success. A native provider is a reviewed source change,
+never a payload/import/module-name setting.
 
-## Command lifecycle
+Owned UUIDs are recorded only after test creation, with actual allowed parametric
+record and native object-lifetime identity. Each operation must resolve the UUID,
+verify the actual record and lifetime and verify direct membership in the bound
+synthetic design layer. Arbitrary handles and preexisting PIOs are never adopted.
+Disarm/restart loses ownership; old objects are left for operator review. Cleanup
+deletes only an explicit owned UUID list, no selection/criteria/delete-all calls.
 
-1. Tool call → server writes `ipc/jobs/<ts>-<cid>.json` (atomic tmp+replace).
-2. Palette timer (100ms) sees the job:
-   - read verbs (`get_/list_/count_/find_/ping/…`, see `_RO_PREFIXES` in
-     `vwx_pump.py`) drain via the OnIdle notification — no keystroke, no
-     focus, invisible;
-   - anything else fires the Ctrl+Shift+B accelerator (real keystroke when VW
-     is foreground, posted key + thread key-state when backgrounded).
-3. "VWX Bridge Start" runs `vwx_pump.pump_all()`: atomic-claims each job
-   (`rename` → `.working`; crash ⇒ job lost with visible timeout, never
-   re-run), dispatches via `commands.py` (reloaded only when its mtime
-   changes), writes `ipc/results/<cid>.json`, returns immediately.
-4. Server (30ms poll on the result file) answers the MCP call. Timeout after
-   `VWX_SOCKET_TIMEOUT` (55s): unclaimed job → removed + hint; claimed job →
-   poll with the cid later.
+## File IPC
 
-Marionette executions (`_FIRE_AND_FORGET`) ack before dispatch — a
-Python-context teardown after a Marionette run loses nothing.
+The configured private directory contains only fixed names: `key.bin`,
+`bridge.json`, `request.json`, `claimed.json`, `result.json`, `client.lock`,
+`pump.lock`, `uncertain.json`, `audit.jsonl` and corresponding temporary files.
+Operator-only preparation also writes `config.json`. Correlation IDs are checked
+as 32 lowercase hex characters and never become filenames. Keys are 32 random
+bytes; bridge/session nonces are independently generated 32-byte tokens. They
+are not logged or returned in MCP tool content.
 
-## History of the constraint
+Canonical JSON is signed with HMAC-SHA256. Kind-specific exact field sets and
+MAC domains distinguish descriptors, requests, results and uncertainty records.
+Both ends verify response/request authentication and bridge/correlation/sequence
+binding. Requests also bind session/document fingerprint, issue time and expiry
+(at most 60 seconds; client default 30). Duplicated JSON keys, NaN/Infinity,
+unknown fields and invalid types are rejected. No prefix/getattr command dispatch.
 
-| Version | Model | Problem |
-|---|---|---|
-| v1/v2 (`legacy/`) | modal dialog + timer pump + TCP :9878 | dialog locks VW UI while bridge alive; Marionette exec tears down the context |
-| v3 | + heartbeat + watchdog restart + idle auto-close | UI still locked while alive |
-| v4 | job files + external watchdog fires hotkey | watchdog process + VW focus needed (Win11 blocks background `keybd_event`); focus flashing |
-| v5–v10 | native C++ palette experiments | mapped every context that crashes on mutation (table above) |
-| v11 | context-split pump: reads background, writes foreground-keystroke | writes still needed a focus moment |
-| v12 | + posted-key accelerator via VW's own thread key-state | VW error dialogs could still block the pump |
-| **v13** | **+ auto-dismiss of VW error dialogs (content-matched, incl. the engine-level "Beim Kompilieren … Error Output" dialog)** | **long-running vs.* calls block the UI for their duration (by VW design)** |
+The in-VW pump claims one fixed request slot by rename. Before executing it,
+it reserves increasing sequence and correlation ID in runtime memory. Each runtime
+has a fresh bridge nonce. Claimed jobs left by a crash block further operation;
+they are never replayed. A new bridge rejects envelopes from the previous nonce.
+Only one client slot and one pump invocation can hold their exclusive lock.
+Residual locks fail closed; there is no automatic stale-lock removal.
 
-## Components
+The client writes an authenticated uncertainty tombstone **before** publishing a
+job. It removes that tombstone only after an authenticated result. A timeout or
+client crash leaves it in place across client restarts. Subsequent mutations are
+refused. `test_status` may collect a late result, but cannot clear uncertainty or
+retry the mutation. Local review and an explicitly fresh IPC directory/session
+are required. Cancellation cannot interrupt an in-flight PIO and is not rollback.
+There is no automatic mutation retry, including after ambiguous transport errors.
 
-| Piece | Path | Role |
-|---|---|---|
-| MCP server | `mcp-server/vwx_mcp_server.py` | 248 tools, fastmcp, file transport; `VWX_TRANSPORT=tcp` for the legacy dialog bridge |
-| Native palette | `native/` → build `VwxBridge.vlb`+`.vwr`, deploy to `C:\Program Files\Vectorworks 2026\Plug-ins\` via `~\bridge\deploy_native_bridge.bat` (VW closed, UAC) | trigger + heartbeat + status UI |
-| Pump | `vwx-plugin/vwx_pump.py` → `%APPDATA%\…\Plug-ins\VW-MCP\` | `pump_readonly()` / `pump_all()`; **no module-level auto-run** |
-| Executor | `vwx-plugin/BridgeStart_MenuCommand.py` | paste into a Python menu-command plugin "VWX Bridge Start", accelerator Ctrl+Shift+B |
-| Commands | `vwx-plugin/commands.py` | all verb implementations, mtime-gated hot-reload |
-| Knowledge index | `vwx-plugin/vs_index.json` (`tools/build_vs_index.py`) | 3071 `vs.*` signatures for validation + `vs_signature` |
+The pump is invoked manually from VW's own Python MENU-COMMAND runner, one job
+per invocation. There is no background read pump either. VW may display errors;
+nothing dismisses dialogs or presses keys. A hung/resetting PIO may block the
+menu invocation. Timeout quarantines external automation; it does not stop VW.
 
-Build: `msbuild native/VwxBridge2026.vcxproj -p:Configuration=Release
--p:Platform=x64` with `VWSDK2026` pointing at the SDK root that contains
-`SDKLib` (VS2022 BuildTools, v143).
+## Parameter and workload rules
 
-## Files
+- Exactly the supplied AV universal names. Correct catalog begins `(2) 2x4`,
+  `(2) 2x6`, `(2) 2x8`, `(3) 2x6`; no trimming or alias rewriting.
+- AV Post 0.1.0.dev5 adds only `KingSize` (default `2x6`), with exact choices
+  `2x4, 2x6, 2x8, 4x4, 4x6, 4x8, 6x6, 6x8, 6x10, 6x12, 8x8, 8x10, 8x12,
+  10x10, 10x12, 12x12`. `StudSize` displays “Trimmer size”; `KingStuds`
+  displays “King members per side” and counts individual selected-size members
+  per side. Built-up kings use KingSize=`2x6`, KingStuds=2, never a built-up
+  KingSize string. Definitions must be updated locally and test objects created
+  fresh; the bridge does not migrate or edit definitions.
+- Trimmers/KingStuds integers 1–20; text at most 512 characters; TextSize
+  0.1–144 points; finite coordinates within ±100,000 document units; rotation
+  within ±360°. Native preflight must also bound final extents after transforms.
+- Read-only initialization/automatic flags and PlacementScale/SavedControlX/Y
+  cannot be set by clients. SavedControl values are **physical inches in Real
+  fields**. ControlPoint coordinates are **document units**; no shared conversion.
+- Callout creation requires distinct native linear endpoints; elbow CP fields
+  are separate. Native endpoint creation/length/readback remain unimplemented.
+- At most 500 owned objects; 25 UUIDs per case/cleanup; 4 iterations, maximum
+  100 object-iterations. No client scripts or list of arbitrary commands.
+- Reset completion requires native evidence before readback. `ResetObject`
+  returning, identical parameter values and elapsed waiting time are insufficient.
+  ResetLeader/ResetElbow must be false after the proven successful redraw.
+- Results preserve stage, command, created IDs and completed count after partial
+  failures. Raw exception strings, paths, credentials and payload text are never
+  logged. The log stops growing near 60 KB; it is not automatically rotated.
 
-| Path (under `%APPDATA%\…\Plug-ins\VW-MCP\`) | Writer | Meaning |
-|---|---|---|
-| `ipc/jobs/*.json` | server | pending commands |
-| `ipc/jobs/*.working` | pump | claimed (crash ⇒ lost, visible timeout — never re-run) |
-| `ipc/results/<cid>.json` | pump | result, consumed+deleted by server (TTL 1h) |
-| `ipc/pump.stamp` | pump | epoch of last pump run |
-| `ipc/native.alive` | palette | heartbeat: `<epoch> <paused 0|1>` |
-| `bridge.log` | palette + pump | diagnostics (native: lines, pump: per-cid) |
+Named cases are `regenerate_owned`, `text_roundtrip` (fixed two-line test text,
+does not restore original text), and `placement_reset`. They return per-reset
+timing supplied **inside VW by the native completion observer**, not bridge wall
+latency. Fake timings in tests are deliberately synthetic. Actual grip dragging,
+scale-preserved manual offsets and native geometry require local acceptance.
 
-## Env knobs
 
-| Var | Default | Meaning |
-|---|---|---|
-| `VWX_TRANSPORT` | `file` (win32) / `tcp` (else) | file-IPC pump vs classic TCP bridge |
-| `VWX_SOCKET_TIMEOUT` | 55 | per-command wait (both transports) |
-| `VWX_PLUGIN_DIR` | auto (`VW-MCP`/`VWX-MCP`) | override plugin dir discovery |
-| `VW_MCP_PORT` | 9878 | tcp transport only |
-| `VWX_IDLE_CLOSE` | 45 (win32) / 0 | tcp transport only (v3 idle close) |
-| `VWX_WAKE_TIMEOUT` | 25 | tcp transport only (v3 wake) |
+## Owned geometry/text inspection and autonomous workflow
 
-## macOS / remote
+`test_read` and completed mutation readback include `geometry` from
+`inspection.py`: a complete bounded snapshot or an explicit failure, never a
+silently truncated success. Limits are 128 descendants, depth 4, 64 vertices per
+polyline, 1024 characters per text item, 4096 total text characters, and 32 KiB
+serialized geometry. It traverses only the owned PIO's children. Every direct
+parent is checked before describing or advancing a handle; cycles and foreign
+handles leaked by an empty-group iterator reject. No document-wide traversal,
+selection, arbitrary criteria, record enumeration or export is introduced.
 
-The native palette + posted-key trigger are Windows-only. Set
-`VWX_TRANSPORT=tcp` and run the classic dialog bridge —
-`vwx-plugin/vwx_mcp_bridge.py` with `VWX_IDLE_CLOSE=0`, or the frozen
-dependency-free reference `legacy/vwx_mcp_bridge_dialog.py`
-(see `legacy/README.md`).
+Snapshots contain group, line, polyline/polygon, ellipse/arc and text primitives,
+snapshot-local ordinal paths, the owned children's actual class names, and text
+content, origin, baseline direction, size in points, measured width/height and
+bounds. The native adapter must normalize nested group/text geometry into the
+root PIO's local document-unit frame. `frame.pio_to_document` is the six affine
+coefficients `[a,b,c,d,tx,ty]`, where `(x,y)` maps to
+`(a*x+c*y+tx, b*x+d*y+ty)`. Frame includes inches/mm, layer scale and actual native
+Callout linear endpoints separately from elbow CP fields. Unsupported primitives,
+nonfinite metrics or incomplete native observations fail rather than create a
+false assertion pass. Native extraction/metrics are still a hard implementation
+gate; the portable reader tests do not prove real text metrics or transforms.
 
-## Verification
+These data permit a local agent to assert landing endpoints, text widths and
+paper gaps without unrelated document queries. For physical spacing, convert a
+paper-inch distance to local model units as `inches * layer_scale`, then multiply
+by 25.4 for mm. Compare with an explicitly chosen local tolerance; do not treat a
+rotated screen bounding box as a text width. Derive the upper/lower text roles
+from content/placement, not unverified child order or a persistent child UUID.
 
-Full command sweep (10 phases, one blank-document session): **164 ok / 56
-handled-error** (intentional bad-input tests) / dialog-only verbs skipped; zero
-crashes — see [TOOL_COVERAGE.md](TOOL_COVERAGE.md). The three SDK-enrichment
-batches (85 further verbs) were each live-tested the same way on landing.
-Background write verified live: `draw_rectangle` executed in 33ms while VW was
-backgrounded and the user worked in another application.
-
-## Roadmap
-
-- True background dispatch without the accelerator hop: C++ research into a
-  legal in-process command post (VW command queue) — would drop the
-  Ctrl+Shift+B workspace dependency.
-- macOS trigger daemon (AppleScript `System Events` keystroke) to port the
-  pump model.
+The target loop is local private-source edit → restricted scratch creation/update
+→ proven completed regeneration → owned geometry/text inspection → report/iterate.
+Private source editing stays with the local agent's filesystem capabilities and
+existing AV bootstrap, outside this public bridge; no arbitrary source-file write
+or code execution tool is added. The user creates/updates the one-time native
+PIO definitions. A manual menu invocation per operation is only an interim
+milestone. Autonomous scheduling requires a separately reviewed supported way to
+enter the valid native execution context with lifecycle identity; no scheduling
+API is invented and no automatic keystroke/timer workaround is supplied.
