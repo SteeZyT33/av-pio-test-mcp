@@ -10,11 +10,18 @@ installers, callbacks, presets or live-document resources.
   boundary is `pio_test/engine.py`; schemas are in `pio_test/schema.py`.
 - Document path plus native runtime lifetime/generation must be proven before
   any operation. Markers, handles, filenames and UUIDs alone are insufficient.
-- `NativeProof` is intentionally unavailable. Do not replace it with an
-  operator checkbox, fake `vs`, basename check or optimistic reset completion.
+- `NativeProof` requires the fixed native observer ABI and a supervised menu
+  scope. Never replace evidence with a checkbox, fake `vs`, basename check or
+  optimistic reset completion. Native acceptance remains pending.
 - All VW mutations belong in VW's own Python MENU-COMMAND runner, initiated
   manually. Native notifications may only invalidate identity. No automatic
   clicks, timers, raw Python-engine execution, sockets, or dialog dismissal.
+- Native/Python bridge startup is OFF. Only the local native Enable menu enables;
+  never expose a client/config bypass. Check the native gate/epoch before claim
+  and every armed read/mutation. Disable preserves objects and uncertain outcomes.
+- Observer metadata constructors must not register callbacks. Activate only from
+  explicit local Enable while OFF; roll back partial registration and unregister
+  active callbacks before teardown. Keep Status/Disable independent of drawing/IPC.
 - Do not modify the operator's AV bootstrap, hot reload, settings or drawing
   files. No installation/deployment is authorized by this PR.
 - Python inside VW must parse as 3.9. Standard library only. Never log secrets,

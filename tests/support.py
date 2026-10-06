@@ -34,6 +34,25 @@ class FakeAdapter:
         self.fail_readback = False
         self.fail_write = False
         self.create_delay = 0
+        self.enabled = False
+        self.control_epoch = 1
+        self.control_uncertain = False
+
+    def local_enable(self):
+        self.control_epoch += 1
+        self.enabled = True
+
+    def local_disable(self):
+        self.control_epoch += 1
+        self.enabled = False
+
+    def bridge_started(self):
+        self.local_disable()
+
+    def operator_control(self):
+        return {'enabled': self.enabled, 'epoch': self.control_epoch,
+                'generation': self.current.generation if self.current else 1,
+                'busy': False, 'disable_pending': False, 'unconfirmed': self.control_uncertain}
 
     def identity(self):
         if self.current is None:
@@ -107,7 +126,7 @@ class FakeAdapter:
 class Fixture:
     def __init__(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()  # Canonical long Windows TEMP path.
         if os.name == 'nt':
             self.private_windows_temp(self.base)
         self.root = self.base / 'drawings'
@@ -122,6 +141,7 @@ class Fixture:
         self.config = {'test_root': self.root, 'ipc_root': self.ipc, 'post_sizes': POST_SIZES}
         self.write('key.bin', self.key)
         self.adapter = FakeAdapter(self.drawing)
+        self.adapter.local_enable()  # explicit simulated operator step for existing suites
 
     @staticmethod
     def private_windows_temp(path):

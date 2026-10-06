@@ -1,5 +1,44 @@
 # Implementation status and local handoff
 
+The latest local follow-up adds default-OFF native operator controls, local-only
+Enable/Disable/Status commands, control-epoch enforcement before IPC claim and
+throughout armed operations, and lazy notification registration from explicit
+Enable rather than extension construction. It adds no cloud runtime, listener,
+automatic arming, startup service or process killer. See OPERATOR_CONTROLS.md.
+Complete Windows verification under default TEMP: 98 run / 97 pass / one POSIX
+skip; all four C++ policy tests and the internal SDK observer build pass. The
+two Windows fixture-only fixes preserve runtime restrictions. Native installation
+is coordinated separately; actual menu/PIO acceptance remains pending.
+
+## Native Post branch update
+
+`codex/native-post-adapter` is based on the cloud Windows fixture fixes at
+`f0444e5492e49516ce9d12fb235e47b7dd9689ff`. The table below records the original
+cloud handoff; this update supersedes its unimplemented-Post statements.
+
+Implemented: fixed native observer ABI, real Python menu-context checks, exact
+field types/catalogs and codecs, Point Post creation, bounded flat child/text
+readback, native reset submission with fresh child identities and later-menu
+confirmation. Failed later confirmation quarantines prior uncertain mutation.
+The SDK-independent menu/lifecycle policy is shared by the tested policy and the
+internal observer. The internal observer compiled against official SDK2026 commit
+`0b3ec438558c264d54b190879ff86049b0e697de`; SDK-dependent source/builds remain
+private for licensing review. No native plugin was installed or loaded.
+
+Windows offline verification: 88 tests run, 87 pass, one POSIX-only skip;
+Python 3.9 grammar passes. Both C++17 policy tests compile/run under MSVC with
+warnings treated as errors and assertions enabled. These checks include an
+isolated stdio exposure subprocess and a real Windows junction rejection, but
+no connection to VW. See CHECKS.md for provenance.
+
+Still required: source/file-manifest review, effective user-folder/credentials
+and menu/Point definition setup, then real VW2026 create/change/reset/later-read
+calibration. Notification ordering, nested native menu context and actual geometry
+coordinates are not proven by offline tests. Linear Callout, transforms,
+nonzero placement, multi-reset named cases and automatic pumping remain blocked.
+The concrete first milestone is documented in NATIVE_POST_ADAPTER.md. A running
+process or desktop drawing operation would not prove this MCP path works.
+
 Cloud branch: `codex/pio-testing-only`, based exactly on
 `0a2f554a15ddddf0d43dc9d251d90a42146c9363`, fork only.
 

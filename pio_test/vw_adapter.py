@@ -1,65 +1,25 @@
-"""Small VW adapter; native integration is deliberately gated in this draft.
+"""Restricted Post adapter for the separately reviewed native observer.
 
 Never infer a document lifetime from a saved path, layer handle, marker or UUID.
 Never infer completed regeneration from ResetObject returning, a sleep, matching
-parameter strings, or a bounding-box change. NativeProof must be implemented
-and reviewed against the operator's 2026 SDK/build before native arming works.
+parameter strings, or a bounding-box change. NativeProof requires an actual
+SDK observer, a verified menu scope, fresh children and later native inspection.
 It is a code interface, NOT a configurable/importable client-supplied provider.
 """
+
 import uuid
 
 from .errors import Rejected, require
 from .schema import PARAMETERS, DIAGNOSTICS, POST_SIZES
 from .inspection import inspect_owned_children
+from .native_proof import NativeProof
 
-NATIVE_BLOCKERS = ['NATIVE_DOCUMENT_LIFETIME_UNAVAILABLE', 'NATIVE_REGEN_COMPLETION_UNAVAILABLE',
-                   'NATIVE_LINEAR_CREATION_UNVERIFIED', 'NATIVE_FIELD_CODEC_UNVERIFIED',
-                   'NATIVE_GEOMETRY_METRICS_UNVERIFIED']
-
-
-class NativeProof:
-    """No fallback. See docs/NATIVE_ACCEPTANCE.md for required SDK evidence.
-
-Future integration must provide identity, preflight, object_lifetime,
-validate_creation/create_linear, encode/decode, regenerate_completed,
-validate_transform and assert_menu_context. No PIO code changes are required
-or authorized. C++ lifecycle policy in native/ is not an SDK implementation.
-"""
-    def identity(self):
-        raise Rejected('NATIVE_DOCUMENT_LIFETIME_UNAVAILABLE')
-
-    def preflight(self):
-        raise Rejected('NATIVE_REGEN_COMPLETION_UNAVAILABLE')
-
-    def assert_menu_context(self):
-        raise Rejected('NATIVE_MENU_CONTEXT_UNVERIFIED')
-
-    def object_lifetime(self, handle):
-        raise Rejected('NATIVE_OBJECT_LIFETIME_UNAVAILABLE')
-
-    def validate_creation(self, args, post_catalog):
-        raise Rejected('NATIVE_CREATION_UNVERIFIED')
-
-    def create_linear(self, start, end):
-        raise Rejected('NATIVE_LINEAR_CREATION_UNVERIFIED')
-
-    def encode(self, name, value, schema):
-        raise Rejected('NATIVE_FIELD_CODEC_UNVERIFIED')
-
-    def decode(self, name, value, schema):
-        raise Rejected('NATIVE_FIELD_CODEC_UNVERIFIED')
-
-    def regenerate_completed(self, handle):
-        raise Rejected('NATIVE_REGEN_COMPLETION_UNAVAILABLE')
-
-    def validate_transform(self, handle, args):
-        raise Rejected('NATIVE_TRANSFORM_EXTENTS_UNVERIFIED')
-
-    def geometry_frame(self, handle):
-        raise Rejected('NATIVE_GEOMETRY_METRICS_UNVERIFIED')
-
-    def describe_child(self, handle, root):
-        raise Rejected('NATIVE_GEOMETRY_METRICS_UNVERIFIED')
+NATIVE_BLOCKERS = [
+    "NATIVE_OBSERVER_REQUIRED",
+    "NATIVE_ACCEPTANCE_PENDING",
+    "NATIVE_LINEAR_CREATION_UNSUPPORTED",
+    "NATIVE_TRANSFORM_CALIBRATION_REQUIRED",
+]
 
 
 class VwAdapter:
@@ -67,33 +27,40 @@ class VwAdapter:
 
     def __init__(self, vs_module):
         self.vs = vs_module
-        self.proof = NativeProof()
+        self.proof = NativeProof(vs_module)
 
     def identity(self):
         identity = self.proof.identity()
         # This documented path call is only corroboration, never lifetime proof.
-        require(self.vs.GetFPathName() == identity.path, 'NATIVE_FULL_PATH_MISMATCH')
+        require(self.vs.GetFPathName() == identity.path, "NATIVE_FULL_PATH_MISMATCH")
         return identity
+
+    def operator_control(self):
+        return self.proof.control()
+
+    def bridge_started(self):
+        self.proof.call("AVPIOTestBridgeStarted")
+
+    def pending_confirmation(self):
+        return bool(self.proof.pending)
 
     def preflight(self):
         self.proof.preflight()
-        # Future preflight must verify exact universal field types and catalog,
-        # ordinary reset (Event-Based OFF, move/rotate ON), point Post and Linear
-        # Callout, an empty initial AV-MCP-TEST design layer and AV-MCP-TEST class,
-        # inches/mm units, and 1:24/48/96. No creation/definition edits here.
+        # Event-Based OFF, move/rotate reset flags and Point configuration still
+        # require operator verification in the native definition manager.
 
     def handle(self, object_id):
         self.proof.assert_menu_context()
         h = self.vs.GetObjectByUuid(object_id)
-        require(h and self.vs.GetTypeN(h) == 86, 'PIO_MISSING')
+        require(h and self.vs.GetTypeN(h) == 86, "PIO_MISSING")
         return h
 
     def object_identity(self, object_id):
         h = self.handle(object_id)
         record = self.vs.GetParametricRecord(h)
-        require(record, 'PARAMETRIC_RECORD_MISSING')
+        require(record, "PARAMETRIC_RECORD_MISSING")
         name = self.vs.GetName(record)
-        require(name in PARAMETERS, 'TOOL_NOT_ALLOWED')
+        require(name in PARAMETERS, "TOOL_NOT_ALLOWED")
         # Must also verify direct parent = the bound synthetic design layer,
         # no wall/container/reference object, and native object lifetime.
         return name, self.proof.object_lifetime(h)
@@ -103,48 +70,74 @@ class VwAdapter:
 
     def create(self, args):
         self.proof.assert_menu_context()
-        if args['tool'] == 'AV Post':
-            h = self.vs.CreateCustomObjectN('AV Post', tuple(args['origin']), args['rotation'], False)
-        elif args['tool'] == 'AV Callout':
+        if args["tool"] == "AV Post":
+            h = self.vs.CreateCustomObjectN(
+                "AV Post", tuple(args["origin"]), args["rotation"], False
+            )
+        elif args["tool"] == "AV Callout":
             # Linear endpoints are NOT ControlPoint01X/Y (the elbow).
-            h = self.proof.create_linear(tuple(args['origin']), tuple(args['end']))
+            h = self.proof.create_linear(tuple(args["origin"]), tuple(args["end"]))
         else:
-            raise Rejected('TOOL_NOT_ALLOWED')
-        require(h, 'CREATE_FAILED')
+            raise Rejected("TOOL_NOT_ALLOWED")
+        require(h, "CREATE_FAILED")
+        # Apply only to the new PIO; never change the active class or layer.
+        self.vs.SetClass(h, "AV-MCP-TEST")
         return str(uuid.UUID(self.vs.GetObjectUuid(h)))
 
     def read(self, object_id, tool):
         h = self.handle(object_id)
         result = {}
-        for category, fields in (('parameters', PARAMETERS[tool]), ('diagnostics', DIAGNOSTICS[tool])):
-            result[category] = {name: self.proof.decode(name, self.vs.GetRField(h, tool, name), schema)
-                                for name, schema in fields.items()}
+        for category, fields in (
+            ("parameters", PARAMETERS[tool]),
+            ("diagnostics", DIAGNOSTICS[tool]),
+        ):
+            result[category] = {
+                name: self.proof.decode(name, self.vs.GetRField(h, tool, name), schema)
+                for name, schema in fields.items()
+            }
         return result
 
     def set_parameter(self, object_id, tool, name, value):
-        require(name in PARAMETERS[tool], 'READ_ONLY_FIELD')
+        require(name in PARAMETERS[tool], "READ_ONLY_FIELD")
         h = self.handle(object_id)
-        self.vs.SetRField(h, tool, name, self.proof.encode(name, value, PARAMETERS[tool][name]))
+        self.vs.SetRField(
+            h, tool, name, self.proof.encode(name, value, PARAMETERS[tool][name])
+        )
+        self.proof.parameter_written(h, name, value)
 
     def regenerate_completed(self, object_id):
         # The proof implementation owns reset and completion observation. Do not
         # insert ResetObject here and then return a fabricated completion flag.
         return self.proof.regenerate_completed(self.handle(object_id))
 
+    def confirm_inspection(self, object_id, state):
+        return self.proof.confirm_inspection(self.handle(object_id), state)
+
+    def has_pending(self, object_id):
+        key = self.vs.GetObjectUuid(self.handle(object_id))
+        return key in self.proof.pending
+
+    def validate_case(self, args):
+        # Multi-reset named cases need a continuation protocol; reject before
+        # the first mutation rather than executing a partially confirmed suite.
+        raise Rejected("NATIVE_CASE_REQUIRES_CONTINUATIONS")
+
     def validate_transform(self, object_id, args):
         self.proof.validate_transform(self.handle(object_id), args)
 
     def transform(self, object_id, args):
         h = self.handle(object_id)
-        if args['action'] == 'move':
-            self.vs.HMove(h, *args['offset'])
-        elif args['action'] == 'rotate':
-            self.vs.HRotate(h, tuple(args['center']), args['angle'])
-        elif args['action'] == 'mirror':
-            result = self.vs.MirrorN(h, False, tuple(args['axis_start']), tuple(args['axis_end']), True)
-            require(result == h, 'MIRROR_REPLACED_OBJECT')
+        if args["action"] == "move":
+            self.vs.HMove(h, *args["offset"])
+        elif args["action"] == "rotate":
+            self.vs.HRotate(h, tuple(args["center"]), args["angle"])
+        elif args["action"] == "mirror":
+            result = self.vs.MirrorN(
+                h, False, tuple(args["axis_start"]), tuple(args["axis_end"]), True
+            )
+            require(result == h, "MIRROR_REPLACED_OBJECT")
         else:
-            raise Rejected('INVALID_TRANSFORM')
+            raise Rejected("INVALID_TRANSFORM")
 
     def delete(self, object_id):
         self.vs.DelObject(self.handle(object_id))
@@ -172,4 +165,6 @@ class VwAdapter:
             def describe(self, child, root):
                 return adapter.proof.describe_child(child, root)
 
-        return inspect_owned_children(self.handle(object_id), ChildReader(), guard, tool)
+        return inspect_owned_children(
+            self.handle(object_id), ChildReader(), guard, tool
+        )

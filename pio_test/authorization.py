@@ -27,9 +27,10 @@ class DocumentIdentity:
 
 
 class Authority:
-    def __init__(self, root, adapter):
+    def __init__(self, root, adapter, control_guard):
         self.root = root
         self.adapter = adapter
+        self.control_guard = control_guard
         self.session = None
         self.binding = None
         self.identity = None
@@ -39,6 +40,8 @@ class Authority:
         self.deadline = None
 
     def arm(self, drawing):
+        self.control_guard()
+        require(not self.uncertain, 'SESSION_QUARANTINED')
         require(self.session is None, 'ALREADY_ARMED')
         target = relative_drawing(self.root, drawing)
         current = self.adapter.identity()
@@ -55,6 +58,7 @@ class Authority:
         self.uncertain = False
 
     def guard(self):
+        self.control_guard()
         require(self.session is not None, 'NOT_ARMED')
         try:
             require(self.deadline is None or time.time() <= self.deadline, 'STALE_JOB')

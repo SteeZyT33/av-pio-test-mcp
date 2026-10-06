@@ -13,7 +13,7 @@ not a claim that this draft is deployable today.
 | VW Python menu template | Vendor embedded Python (3.9 syntax), vendor `vs`, reviewed checkout; no FastMCP/pip | Fixed IPC files and allowed session-owned PIO operations, once native gates exist |
 | Windows path/DACL validation | Windows system `kernel32`/`advapi32` via stdlib ctypes | None |
 | Offline tests | CPython stdlib unittest; C++17 compiler for policy test | Temporary disposable mock files and portable test executable |
-| Native runtime plugin | **None provided or buildable in this draft** | None |
+| Native runtime plugin | Internal SDK2026 observer built separately; source/license/build review and live acceptance required; no SDK artifact supplied publicly | No deployment performed |
 | Lock | `requirements.lock` = complete empty third-party closure | No downloads |
 
 Cloud checks used CPython 3.12.14 and GCC 13.3.0 on Linux. Record exact Windows
@@ -69,6 +69,19 @@ connect it to real VW until the native implementation and acceptance gates pass.
 
 ## Local menu/fixture setup after gate implementation and review
 
+For the first native Post milestone, follow [NATIVE_POST_ADAPTER.md](NATIVE_POST_ADAPTER.md).
+The SDK **AV PIO Test Supervisor** menu must invoke the fixed Python
+**AV PIO Test Pump** command. Direct invocation of the Python pump fails the
+native scope check. The following general preparation steps alone cannot enable
+this adapter. Native plugin credentials or operator enablement are an additional
+VW2026 prerequisite; this repository does not forge credentials or change security
+settings. Review the internal source/build manifest before installing anything.
+Also create the fixed Python **AV PIO Test Operator** menu from its review
+template and add native **Enable PIO Testing**, **Disable PIO Testing** and
+**PIO Testing Status** commands to a development workspace. See
+[OPERATOR_CONTROLS.md](OPERATOR_CONTROLS.md). Startup is OFF; initialization runs
+through local Enable before any pump. A reconnect never enables or arms.
+
 1. The user creates/maintains **AV Post and AV Callout native definitions locally**
    with the existing private AV bootstrap/hot reload. Nothing here installs,
    edits, copies, renames or recreates those definitions. AV Beam/AV Beam Tool
@@ -87,7 +100,9 @@ connect it to real VW until the native implementation and acceptance gates pass.
 4. Run the menu once to initialize the bridge descriptor, then request
    `test_arm` for e.g. `disposable.vwx` and manually run the menu again. Each
    subsequent queued job needs one manual invocation before its TTL expires.
-   Client default is 30 seconds, requests can never exceed 60 seconds.
+   Client default is 60 seconds, and requests can never exceed 60 seconds.
+   Prompt the operator immediately after queuing the request so they have the
+   full manual window. Expiry does not authorize an automatic retry.
 5. Keep all test-created PIOs on the synthetic layer. Scale/class experiments are
    manual and must be observed by the native proof. No broad document queries,
    hidden saves, selections, production modeling or PIO definitions are exposed.
@@ -111,6 +126,15 @@ names/credential files separately. No native binary is included in this draft,
 and no existing upstream binary should be downloaded or reused.
 
 ## Explicit recovery and removal — preserve user files/settings
+
+Temporary stop: select **Disable PIO Testing**, then confirm **OFF** after any
+executing call returns. Preserve drawings/objects and uncertain evidence. This
+does not uninstall anything. Client relaunch cannot bypass the native gate.
+
+Removal additionally includes only the specifically installed new native
+`AVPIOTestObserver.vlb/.vwr`, the user-created `AV PIO Test Operator` menu file and
+the four new native workspace entries, with VW closed manually. Never remove the
+whole Plug-ins directory, original workspace, AV definitions or credentials.
 
 - On an ambiguous timeout, **do not retry**. Stop the MCP process, wait for VW to
   return (or review its crash), and inspect the disposable drawing manually. Do

@@ -8,9 +8,12 @@ locally created definitions. Keep all evidence free of production drawings/code.
 
 ## Required source work before enabling native operations
 
-`pio_test/vw_adapter.py:NativeProof` intentionally raises errors. Implement and
-review the following through supported VW2026 APIs; do not remove the gates or
-add configuration switches to bypass them. None of these APIs is invented here.
+The narrow Post adapter is implemented in `pio_test/native_proof.py`; its
+separate internal SDK observer has compiled offline. This does not complete the
+matrix below. Review [the Post contract](NATIVE_POST_ADAPTER.md), then verify
+native notification delivery, menu nesting, reset/child freshness and coordinates
+before accepting that milestone. Callout, transformations and automatic pumping
+remain unsupported. Never bypass evidence with configuration switches.
 
 | Gate | Required evidence / implementation |
 | --- | --- |
@@ -34,6 +37,14 @@ changes only. A provider that just returns that model's state without reliable
 SDK events is **not** acceptable.
 
 ## Local matrix after the gates above are implemented
+
+Before any PIO job, verify the local control matrix in OPERATOR_CONTROLS.md:
+startup OFF; Enable READY without arming; Disable before claim; re-enable cannot
+restore an old queued/session job; Status/Disable after drawing switch or IPC
+failure; BUSY disable request acknowledged OFF only after return; uncertain effects
+preserved; external client/server restart cannot enable/arm. Confirm metadata load
+does not register callbacks, and lazy Enable registration/rollback/teardown works
+on the actual VW build. Keep all native errors visible.
 
 Record VW build, Python, OS/SDK versions, PIO source revision (private identifier
 only), units, layer scale, native operation/reset timing, observed geometry,
@@ -62,7 +73,7 @@ across horizontal, vertical and diagonal axes, then rotated after reflection.
 | Undo/redo/save/reopen | Manual undo/redo must invalidate session authority; saved/reopened same path requires fresh arm and must not adopt old UUIDs. Inspect PIO persistence manually after save/reopen, including manually dragged handles and reset flags. The interface does not save or invoke Undo/Redo by menu name. |
 | Owned cleanup/foreign objects | Mix session-created PIOs with manually created allowed PIOs. Cleanup explicit owned list only; other objects unchanged. Modify actual record/layer/lifetime and verify rejection. Production AV Beam/AV Beam Tool always reject. |
 | Error/timeout | Native PIO errors, failed readback, modal dialog and slow regeneration: retain visible dialog, report partial/uncertain state, no mutation retry or claimed-job replay. Cancellation never reports rollback. Verify client-crash uncertainty survives restart. |
-| Hundreds of objects and timings | Build 100, 250, then up to 500 owned objects in bounded operations, and reset/read in batches ≤25 objects × ≤4 iterations. Measure p50/p95/max and total **inside-VW completed regeneration durations** separately from IPC/manual wait. Report object count, memory/UI responsiveness and errors. Adjust a suite downward if 30-second job TTL is exceeded; never raise bounds silently or auto-repeat timed-out batches. |
+| Hundreds of objects and timings | Build 100, 250, then up to 500 owned objects in bounded operations, and reset/read in batches ≤25 objects × ≤4 iterations. Measure p50/p95/max and total **inside-VW completed regeneration durations** separately from IPC/manual wait. Report object count, memory/UI responsiveness and errors. Adjust a suite downward if the 60-second job TTL is exceeded; never raise bounds silently or auto-repeat timed-out batches. |
 
 There is no pass threshold invented for native speed or stability. Establish a
 baseline on the local build and compare changes. A passing matrix does not make
