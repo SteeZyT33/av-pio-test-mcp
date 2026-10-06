@@ -1,5 +1,18 @@
 # Offline verification record
 
+## MCP request metadata compatibility (2026-10-06)
+
+`python -m unittest tests.test_mcp -v` passed all **11 checks** on Windows
+CPython 3.12.7. This includes metadata-bearing discovery and real subprocess
+initialize/initialized/tools-list/resource-list frames, exactly ten restricted
+tools and empty resources, malformed metadata/progress-token rejection, strict
+extra command/method argument rejection, metadata isolation from client calls
+and results, unchanged oversized-frame closure, and Python 3.9/source-boundary
+checks. The optional reserved `_meta` object is normalized only in the external
+MCP envelope; no native/Pump/gate, IPC, installed file or tool schema changed.
+The installed Codex app's actual discovery must be repeated separately by the
+lead after review. These offline tests submit no Vectorworks jobs.
+
 ## Manual request window follow-up (2026-10-06)
 
 The external Client now defaults to a 60-second request window, matching the

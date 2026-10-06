@@ -60,6 +60,13 @@ binding. Requests also bind session/document fingerprint, issue time and expiry
 (at most 60 seconds; client default 60). Duplicated JSON keys, NaN/Infinity,
 unknown fields and invalid types are rejected. No prefix/getattr command dispatch.
 
+The MCP stdio envelope accepts the standard optional `_meta` object. Its
+request `progressToken`, when present, must be a string or finite number.
+Metadata is discarded before the existing method/command parameter checks;
+it is never forwarded to IPC/tool arguments, used as authority, logged or
+echoed in results. The 64 KiB frame limit and exact tool allowlist remain intact.
+See the [MCP 2025-06-18 request schema](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2025-06-18/schema.ts).
+
 The in-VW pump claims one fixed request slot by rename. Before executing it,
 it reserves increasing sequence and correlation ID in runtime memory. Each runtime
 has a fresh bridge nonce. Claimed jobs left by a crash block further operation;

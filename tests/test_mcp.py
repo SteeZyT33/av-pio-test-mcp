@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+from unittest.mock import Mock
 
 from pio_test.mcp_stdio import Server, serve
 from pio_test.schema import COMMANDS
@@ -40,6 +41,55 @@ class McpTests(unittest.TestCase):
             self.assertEqual(tool['inputSchema']['type'], 'object')
             self.assertFalse(tool['annotations']['openWorldHint'])
 
+    def test_discovery_accepts_standard_request_metadata(self):
+        for token in ('discovery', 0, 1.5):
+            metadata = {'progressToken': token,
+                        'io.modelcontextprotocol/clientInfo': {'name': 'codex'}}
+            with self.subTest(token=token):
+                tools = self.request('tools/list', {'_meta': metadata})['result']['tools']
+                self.assertEqual({tool['name'] for tool in tools}, set(COMMANDS))
+                self.assertEqual(len(tools), 10)
+                for method in ('ping', 'resources/list',
+                               'resources/templates/list', 'prompts/list'):
+                    self.assertIn('result', self.request(method, {'_meta': metadata}))
+
+    def test_malformed_request_metadata_is_rejected(self):
+        for metadata in (None, [], 'metadata', 1, True, {1: 'invalid key'},
+                         {'progressToken': None}, {'progressToken': True},
+                         {'progressToken': []}, {'progressToken': {}},
+                         {'progressToken': float('nan')},
+                         {'progressToken': float('inf')}):
+            with self.subTest(metadata=metadata):
+                response = self.request('tools/list', {'_meta': metadata})
+                self.assertEqual(response['error']['message'], 'INVALID_PARAMS')
+                self.assertNotIn('result', response)
+
+    def test_metadata_does_not_enter_tool_arguments_or_result(self):
+        client = Mock(wraps=RejectingClient())
+        self.server.client = client
+        metadata = {'progressToken': 'metadata-never-echo',
+                    'arguments': {'force': True}, 'command': 'execute_script'}
+        params = {'name': 'test_status', 'arguments': {}, '_meta': metadata}
+        response = self.request('tools/call', params)
+        self.assertFalse(response['result']['isError'])
+        client.call.assert_called_once_with('test_status', {})
+        self.assertNotIn('metadata-never-echo', json.dumps(response))
+        self.assertEqual(params['_meta'], metadata)  # Input envelope is not mutated.
+
+    def test_metadata_does_not_relax_method_or_command_arguments(self):
+        response = self.request('tools/list', {'_meta': {}, 'force': True})
+        self.assertEqual(response['error']['message'], 'INVALID_PARAMS')
+        response = self.request('tools/call', {'_meta': {}, 'name': 'test_status',
+                                'arguments': {}, 'force': True})
+        self.assertEqual(response['error']['message'], 'INVALID_PARAMS')
+        for arguments in ({'force': True}, {'_meta': {}}):
+            response = self.request('tools/call', {'_meta': {}, 'name': 'test_status',
+                                    'arguments': arguments})
+            self.assertTrue(response['result']['isError'])
+        response = self.request('tools/call', {'_meta': {}, 'name': 'execute_script',
+                                'arguments': {}})
+        self.assertTrue(response['result']['isError'])
+
     def test_no_live_document_resources_or_templates(self):
         self.assertEqual(self.request('resources/list')['result'], {'resources': []})
         self.assertEqual(self.request('resources/templates/list')['result'], {'resourceTemplates': []})
@@ -73,10 +123,12 @@ class McpTests(unittest.TestCase):
         config = f.config_file()
         messages = [
             {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
-             'params': {'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {}}},
-            {'jsonrpc': '2.0', 'method': 'notifications/initialized'},
-            {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/list'},
-            {'jsonrpc': '2.0', 'id': 3, 'method': 'resources/list'},
+             'params': {'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {},
+                        '_meta': {'progressToken': 'initialize'}}},
+            {'jsonrpc': '2.0', 'method': 'notifications/initialized', 'params': {'_meta': {}}},
+            {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/list',
+             'params': {'_meta': {'progressToken': 2}}},
+            {'jsonrpc': '2.0', 'id': 3, 'method': 'resources/list', 'params': {'_meta': {}}},
         ]
         repo = Path(__file__).resolve().parents[1]
         env = dict(os.environ, MCP_TRANSPORT='streamable-http', FASTMCP_HOST='0.0.0.0',

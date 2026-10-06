@@ -4,6 +4,7 @@ Synchronous calls are serialized. Cancellation notifications do not interrupt
 native work and are never advertised as rollback. No resources/prompts/tasks.
 """
 import argparse
+import math
 import sys
 
 from .errors import Rejected, require
@@ -29,6 +30,17 @@ class Server:
             method = message['method']
             params = message.get('params', {})
             require(type(params) is dict, 'INVALID_PARAMS')
+            if '_meta' in params:
+                metadata = params['_meta']
+                require(type(metadata) is dict and
+                        all(type(key) is str for key in metadata), 'INVALID_PARAMS')
+                if request_id is not None and 'progressToken' in metadata:
+                    token = metadata['progressToken']
+                    require(type(token) in (str, int, float) and
+                            (type(token) is str or math.isfinite(token)), 'INVALID_PARAMS')
+                # Reserved MCP envelope metadata is ignored, never forwarded to
+                # command validation/IPC, echoed, or used to grant authority.
+                params = {key: value for key, value in params.items() if key != '_meta'}
             if request_id is None:
                 if method == 'notifications/initialized' and self.initialized and params == {}:
                     self.ready = True
