@@ -7,3 +7,18 @@ vwx-plugin/bridge.log
 
 # local render scratch (contains absolute source paths)
 render/
+
+# Private operator state and AV definitions never belong in this public fork.
+config.json
+key.bin
+ipc/
+*.vwx
+*.vso
+*.vsm
+*.vlb
+*.vwr
+*.vst
+*.obj
+*.pdb
+*.exe
+native/Output/
