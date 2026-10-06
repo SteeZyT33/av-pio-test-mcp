@@ -66,9 +66,13 @@ class PathTests(unittest.TestCase):
         for value in ['../file', 'results/cid.json', 'C:/out.json', 'anything.json', 'request.json.tmp.tmp']:
             with self.assertRaisesRegex(Rejected, 'FILENAME'):
                 ipc_path(self.f.ipc, value)
-        (self.f.ipc / 'result.json').symlink_to(self.f.drawing)
-        with self.assertRaisesRegex(Rejected, 'REPARSE'):
-            ipc_path(self.f.ipc, 'result.json')
+        result_link = self.f.ipc / 'result.json'
+        result_link.symlink_to(self.f.drawing)
+        try:
+            with self.assertRaisesRegex(Rejected, 'REPARSE'):
+                ipc_path(self.f.ipc, 'result.json')
+        finally:
+            result_link.unlink()  # Only our test-created link; never the target.
 
     @unittest.skipIf(os.name == 'nt', 'POSIX mode test')
     def test_private_permissions_fail_closed(self):

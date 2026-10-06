@@ -17,6 +17,8 @@ class TransportTests(unittest.TestCase):
         self.f = Fixture()
         self.addCleanup(self.f.close)
         self.pump = Pump(self.f.config, self.f.key, self.f.adapter)
+        self.f.adapter.local_enable()
+        self.pump.operator_sync()
 
     def job(self, command='test_status', args=None, **changes):
         now = time.time()
@@ -120,6 +122,9 @@ class TransportTests(unittest.TestCase):
         old_bridge = self.pump.bridge
         self.pump = Pump(self.f.config, self.f.key, self.f.adapter)
         self.assertNotEqual(old_bridge, self.pump.bridge)
+        self.assertFalse(self.f.adapter.enabled)
+        self.f.adapter.local_enable()
+        self.pump.operator_sync()
         self.assertEqual(self.submit(job)['code'], 'BRIDGE_MISMATCH')
         self.assertEqual(self.f.adapter.mutations, 0)
 

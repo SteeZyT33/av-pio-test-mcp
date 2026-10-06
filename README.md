@@ -34,6 +34,23 @@ AV Beam and AV Beam Tool are rejected at both entry and in-VW boundaries.
 There are no MCP resources, arbitrary batch/scripting tools, exports, saves,
 document switches, layer/class setters or PIO-definition editing routes.
 
+## Local controls
+
+The MCP runs as a local stdio process with authenticated local file IPC. No
+cloud runtime, public listener, tunnel, telemetry or startup service is used.
+Vectorworks and each new Python bridge runtime start **OFF**. A client reconnect
+cannot enable or arm testing. The native menus are **Enable PIO Testing**,
+**Disable PIO Testing**, and **PIO Testing Status**; pumping remains the separate
+**AV PIO Test Supervisor** command. The fixed Python operator menu never dispatches
+jobs or changes drawings. See [the operator controls](docs/OPERATOR_CONTROLS.md).
+
+Enable makes the bridge READY and still requires explicit scratch-drawing arm.
+Disable revokes authority/ownership and queued jobs without deleting objects.
+If a native operation is executing, status stays BUSY until it returns; OFF is
+acknowledged afterwards. Uncertain effects are reported without retry or rollback.
+Stopping the stdio process is separate; the native OFF gate remains decisive even
+if the MCP client relaunches it.
+
 ## Development workflow and current milestone
 
 The end goal is a complete local edit → create/change scratch PIO → regenerate →
@@ -63,6 +80,10 @@ g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_document_lifetime.cpp
 /tmp/av-pio-lifetime-test
 g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_menu_lifecycle.cpp -o /tmp/av-pio-menu-test
 /tmp/av-pio-menu-test
+g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_operator_gate.cpp -o /tmp/av-pio-gate-test
+/tmp/av-pio-gate-test
+g++ -std=c++17 -Wall -Wextra -Werror -pedantic native/test_deferred_registration.cpp -o /tmp/av-pio-registration-test
+/tmp/av-pio-registration-test
 git diff --check
 ```
 

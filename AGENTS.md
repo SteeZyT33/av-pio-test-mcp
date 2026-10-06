@@ -16,6 +16,12 @@ installers, callbacks, presets or live-document resources.
 - All VW mutations belong in VW's own Python MENU-COMMAND runner, initiated
   manually. Native notifications may only invalidate identity. No automatic
   clicks, timers, raw Python-engine execution, sockets, or dialog dismissal.
+- Native/Python bridge startup is OFF. Only the local native Enable menu enables;
+  never expose a client/config bypass. Check the native gate/epoch before claim
+  and every armed read/mutation. Disable preserves objects and uncertain outcomes.
+- Observer metadata constructors must not register callbacks. Activate only from
+  explicit local Enable while OFF; roll back partial registration and unregister
+  active callbacks before teardown. Keep Status/Disable independent of drawing/IPC.
 - Do not modify the operator's AV bootstrap, hot reload, settings or drawing
   files. No installation/deployment is authorized by this PR.
 - Python inside VW must parse as 3.9. Standard library only. Never log secrets,

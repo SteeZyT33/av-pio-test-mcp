@@ -60,7 +60,7 @@ def authenticate(key, message, fields, kind):
 REQUEST_FIELDS = {'v', 'kind', 'bridge', 'session', 'binding', 'sequence', 'cid',
                   'issued', 'expires', 'command', 'args'}
 RESULT_FIELDS = {'v', 'kind', 'bridge', 'cid', 'sequence', 'result'}
-BRIDGE_FIELDS = {'v', 'kind', 'bridge', 'native_blockers'}
+BRIDGE_FIELDS = {'v', 'kind', 'bridge', 'native_blockers', 'operator_state'}
 
 
 def request(key, message, bridge, last_sequence, now=None):

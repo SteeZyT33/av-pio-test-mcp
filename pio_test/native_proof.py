@@ -13,12 +13,20 @@ from .authorization import DocumentIdentity
 from .errors import Rejected, require
 from .field_codec import decode, encode, native_type
 from .native_geometry import describe
+from .operator_control import validate_snapshot
 from .schema import DIAGNOSTICS, PARAMETERS, validate
 from .wire import loads, token
 
 MENU = "AV PIO Test Pump"
 FIXTURE = "AV-MCP-TEST"
-FUNCTIONS = ("AVPIOTestSnapshot", "AVPIOTestObject", "AVPIOTestReset")
+FUNCTIONS = (
+    "AVPIOTestSnapshot",
+    "AVPIOTestObject",
+    "AVPIOTestReset",
+    "AVPIOTestGate",
+    "AVPIOTestBridgeStarted",
+    "AVPIOTestOperatorReport",
+)
 
 
 class NativeProof:
@@ -47,6 +55,11 @@ class NativeProof:
             all(callable(getattr(self.vs, name, None)) for name in FUNCTIONS),
             "NATIVE_OBSERVER_UNAVAILABLE",
         )
+        control = self.control()
+        require(
+            control["enabled"] and not control["disable_pending"], "PIO_TESTING_OFF"
+        )
+        require(not control["unconfirmed"], "NATIVE_OUTCOME_UNCONFIRMED")
         current = self.vs.GetPluginInfo()
         require(
             type(current) is tuple
@@ -62,6 +75,22 @@ class NativeProof:
         snapshot = self.call("AVPIOTestSnapshot")
         require(snapshot.get("menu_scope") is True, "NATIVE_MENU_CONTEXT_UNVERIFIED")
         return snapshot
+
+    def control(self):
+        value = self.call("AVPIOTestGate")
+        return validate_snapshot(
+            {
+                name: value.get(name)
+                for name in (
+                    "enabled",
+                    "epoch",
+                    "generation",
+                    "busy",
+                    "disable_pending",
+                    "unconfirmed",
+                )
+            }
+        )
 
     def identity(self):
         state = self.assert_menu_context()
@@ -313,6 +342,7 @@ class NativeProof:
                 "POST_LABEL_UNCONFIRMED",
             )
             require(not notes or notes in texts, "POST_LABEL_UNCONFIRMED")
+        self.pending.pop(key, None)
         return {
             "completed": True,
             "vw_ms": pending["vw_ms"],

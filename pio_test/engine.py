@@ -5,13 +5,77 @@ import threading
 from .authorization import Authority
 from .errors import Rejected, require
 from .operations import Operations
+from .operator_control import snapshot, state
 from .schema import MUTATIONS, validate_command
 
 
 class Engine:
     def __init__(self, root, adapter):
-        self.auth = Authority(root, adapter)
         self.lock = threading.Lock()
+        self.control_epoch = None
+        self.auth = Authority(root, adapter, self.control_guard)
+
+    def synchronize_control(self, strict_document=False, check_document=True):
+        value = snapshot(self.auth.adapter)
+        if self.control_epoch != value["epoch"] or not value["enabled"]:
+            pending = getattr(
+                self.auth.adapter, "pending_confirmation", lambda: False
+            )()
+            uncertain = self.auth.uncertain or value["unconfirmed"] or pending
+            self.auth.disarm()
+            self.auth.uncertain = uncertain
+            self.control_epoch = value["epoch"]
+        if (
+            check_document
+            and self.auth.identity is not None
+            and value["generation"] != self.auth.identity.generation
+        ):
+            uncertain = (
+                self.auth.uncertain
+                or getattr(self.auth.adapter, "pending_confirmation", lambda: False)()
+            )
+            self.auth.disarm()
+            self.auth.uncertain = uncertain
+            require(not strict_document, "DOCUMENT_MISMATCH")
+        if value["unconfirmed"]:
+            self.auth.uncertain = True
+        return value
+
+    def control_guard(self):
+        value = self.synchronize_control(strict_document=True)
+        require(value["enabled"] and not value["disable_pending"], "PIO_TESTING_OFF")
+        require(not value["unconfirmed"], "NATIVE_OUTCOME_UNCONFIRMED")
+        return value
+
+    def operator_status(self, check_document=True):
+        value = self.synchronize_control(check_document=check_document)
+        pending = getattr(self.auth.adapter, "pending_confirmation", lambda: False)()
+        return {
+            "state": state(
+                value, self.auth.session is not None, self.auth.uncertain, pending
+            ),
+            "enabled": value["enabled"],
+            "disable_pending": value["disable_pending"],
+            "outcome_unconfirmed": self.auth.uncertain
+            or value["unconfirmed"]
+            or pending,
+            "armed": self.auth.session is not None,
+            "owned_count": len(self.auth.owned),
+            "objects_left_in_drawing": True,
+            "rollback": False,
+        }
+
+    def preclaim(self, command, args, session, binding):
+        validate_command(command, args)
+        self.control_guard()
+        if command != "test_status":
+            self.auth.check_envelope(session, binding)
+        if self.auth.session is not None or command not in (
+            "test_status",
+            "test_arm",
+            "test_disarm",
+        ):
+            self.auth.guard()
 
     def execute(self, command, args, session=None, binding=None, deadline=None):
         # Nonblocking rejects recursive invocations from a PIO rather than deadlock.
@@ -21,7 +85,13 @@ class Engine:
         try:
             self.auth.deadline = deadline
             validate_command(command, args)
-            self.auth.check_envelope(session, binding)
+            if command == "test_status":
+                self.synchronize_control(strict_document=True)
+                if self.auth.session is not None:
+                    self.auth.guard()
+            else:
+                self.control_guard()
+                self.auth.check_envelope(session, binding)
             if command not in ("test_status", "test_arm", "test_disarm"):
                 self.auth.guard()
                 require(not self.auth.uncertain, "SESSION_QUARANTINED")
@@ -36,12 +106,15 @@ class Engine:
                 self.auth.disarm()
                 result = {"armed": False, "objects_left_in_drawing": True}
             elif command == "test_status":
-                result = {
-                    "armed": self.auth.session is not None,
-                    "owned_count": len(self.auth.owned),
-                    "quarantined": self.auth.uncertain,
-                    "native_blockers": self.auth.adapter.blockers,
-                }
+                result = dict(
+                    self.operator_status(),
+                    **{
+                        "armed": self.auth.session is not None,
+                        "owned_count": len(self.auth.owned),
+                        "quarantined": self.auth.uncertain,
+                        "native_blockers": self.auth.adapter.blockers,
+                    },
+                )
             elif command == "test_create":
                 result = op.create(args)
             elif command == "test_read":

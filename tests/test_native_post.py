@@ -32,6 +32,8 @@ class HostContract:
         self.enum_error = False
         self.child_limit = 4
         self.fields = dict(PARAMETERS["AV Post"], **DIAGNOSTICS["AV Post"])
+        self.enabled = False
+        self.control_epoch = 1
         self.native_types = {
             name: native_type(name, schema) for name, schema in self.fields.items()
         }
@@ -52,6 +54,35 @@ class HostContract:
                 "invocation": self.invocation,
             }
         )
+
+    def local_enable(self):
+        self.enabled = True
+        self.control_epoch += 1
+
+    def local_disable(self):
+        self.enabled = False
+        self.control_epoch += 1
+
+    def AVPIOTestGate(self):
+        return json.dumps(
+            {
+                "abi": 1,
+                "ok": True,
+                "enabled": self.enabled,
+                "epoch": self.control_epoch,
+                "generation": self.generation,
+                "busy": False,
+                "disable_pending": False,
+                "unconfirmed": False,
+            }
+        )
+
+    def AVPIOTestBridgeStarted(self):
+        self.local_disable()
+        return json.dumps({"abi": 1, "ok": True})
+
+    def AVPIOTestOperatorReport(self, value):
+        return json.dumps({"abi": 1, "ok": True})
 
     def AVPIOTestObject(self, h):
         data = self.objects[h]
@@ -250,6 +281,7 @@ class NativeContractTests(unittest.TestCase):
         self.fixture = Fixture()
         self.addCleanup(self.fixture.close)
         self.host = HostContract(self.fixture.root / "disposable.vwx")
+        self.host.local_enable()
         self.adapter = VwAdapter(self.host)
         self.engine = Engine(self.fixture.root, self.adapter)
 
@@ -288,6 +320,19 @@ class NativeContractTests(unittest.TestCase):
         self.assertFalse(self.engine.auth.uncertain)
         self.assertEqual(self.host.resets, 1)
 
+    def test_disable_pending_reset_preserves_uncertainty_and_cannot_rearm(self):
+        key = self.create()
+        self.host.local_disable()
+        status = self.engine.operator_status()
+        self.assertEqual(status["state"], "OFF")
+        self.assertTrue(status["outcome_unconfirmed"])
+        self.assertFalse(status["armed"])
+        self.assertTrue(self.host.GetObjectByUuid(key))
+        self.host.local_enable()
+        self.assertEqual(self.engine.operator_status()["state"], "UNCONFIRMED")
+        result = self.call("test_arm", {"drawing": "disposable.vwx"})
+        self.assertEqual(result["code"], "SESSION_QUARANTINED")
+
     def test_reset_return_with_stale_children_is_partial_and_quarantined(self):
         self.arm()
         self.host.stale_children = True
@@ -321,6 +366,7 @@ class NativeContractTests(unittest.TestCase):
             ("pio_context", 100),
         ]:
             host = HostContract("unused.vwx")
+            host.local_enable()
             setattr(host, attribute, value)
             with self.assertRaises(Rejected):
                 NativeProof(host).assert_menu_context()

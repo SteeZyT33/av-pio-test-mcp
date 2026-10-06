@@ -1,5 +1,15 @@
 # Implementation status and local handoff
 
+The latest local follow-up adds default-OFF native operator controls, local-only
+Enable/Disable/Status commands, control-epoch enforcement before IPC claim and
+throughout armed operations, and lazy notification registration from explicit
+Enable rather than extension construction. It adds no cloud runtime, listener,
+automatic arming, startup service or process killer. See OPERATOR_CONTROLS.md.
+Complete Windows verification under default TEMP: 98 run / 97 pass / one POSIX
+skip; all four C++ policy tests and the internal SDK observer build pass. The
+two Windows fixture-only fixes preserve runtime restrictions. Native installation
+is coordinated separately; actual menu/PIO acceptance remains pending.
+
 ## Native Post branch update
 
 `codex/native-post-adapter` is based on the cloud Windows fixture fixes at

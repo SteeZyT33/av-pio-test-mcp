@@ -38,6 +38,14 @@ SDK events is **not** acceptable.
 
 ## Local matrix after the gates above are implemented
 
+Before any PIO job, verify the local control matrix in OPERATOR_CONTROLS.md:
+startup OFF; Enable READY without arming; Disable before claim; re-enable cannot
+restore an old queued/session job; Status/Disable after drawing switch or IPC
+failure; BUSY disable request acknowledged OFF only after return; uncertain effects
+preserved; external client/server restart cannot enable/arm. Confirm metadata load
+does not register callbacks, and lazy Enable registration/rollback/teardown works
+on the actual VW build. Keep all native errors visible.
+
 Record VW build, Python, OS/SDK versions, PIO source revision (private identifier
 only), units, layer scale, native operation/reset timing, observed geometry,
 returned fields and visible errors. Never publish private source or screenshots

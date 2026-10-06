@@ -37,7 +37,7 @@ first mutation. They are remaining implementation/calibration work.
 
 ## Fixed internal observer ABI
 
-The private SDK observer must supply exactly these three Python `vs` functions.
+The private SDK observer must supply these fixed Python `vs` functions.
 There is no configuration-selected provider, import path, DLL loader, script,
 function name, caller-selected menu or generic native execution payload.
 Each result is bounded JSON (at most 8192 UTF-8 bytes) with `abi: 1` and `ok`.
@@ -48,6 +48,9 @@ Failure contains no native exception text, private path or parameter content.
 | `AVPIOTestSnapshot()` | Saved full path, random process instance, lifecycle generation, random current fixture identity, actual supervised menu scope/invocation, native Top/Plan, fixture class and Post plugin availability |
 | `AVPIOTestObject(handle)` | Actual Post record/type/direct fixture parent/class, native object-lifetime token and planar matrix, current invocation, last reset ticket and immediate-reset-return evidence |
 | `AVPIOTestReset(handle)` | Only the verified owned Post scope; real synchronous SDK reset call, returned ticket/invocation and measured native call duration |
+| `AVPIOTestGate()` | Native enabled/control epoch, callback generation, BUSY/disable-pending/unconfirmed state and current fixed operator-menu action; no drawing access |
+| `AVPIOTestBridgeStarted()` | New Python bridge runtime forces native OFF and invalidates authority before any fallible IPC initialization; no enabling route |
+| `AVPIOTestOperatorReport(state)` | Bounded five-state display acknowledgment in the actual native operator scope; optional unconfirmed-outcome suffix; never grants authority |
 
 The native **AV PIO Test Supervisor** is a genuine SDK menu event sink. It enters
 a bounded scope and invokes exactly **AV PIO Test Pump** once through the native
@@ -55,6 +58,13 @@ menu API. The Python side verifies `GetPluginInfo()` reports that exact menu and
 that it is not executing within a PIO. Scope exits even after failure.
 Reentrant entry and observer calls during a reset reject. A callback never runs
 Python or reads/mutates the drawing.
+
+The operator menus and default-OFF enforcement are specified in
+[OPERATOR_CONTROLS.md](OPERATOR_CONTROLS.md). Native metadata construction performs
+no notification registration. Explicit local Enable first forces OFF, lazily
+registers the supported callbacks with rollback on failure, initializes the
+Python bridge while still OFF, and enables only after that initialization reports
+success. Status/Disable do not start registration or require a drawing.
 
 The observer registers supported lifecycle, save/open/close, edit/undo and
 environment callbacks and unregisters them before teardown. Identity combines

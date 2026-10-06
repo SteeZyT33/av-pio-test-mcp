@@ -35,6 +35,15 @@ class VwAdapter:
         require(self.vs.GetFPathName() == identity.path, "NATIVE_FULL_PATH_MISMATCH")
         return identity
 
+    def operator_control(self):
+        return self.proof.control()
+
+    def bridge_started(self):
+        self.proof.call("AVPIOTestBridgeStarted")
+
+    def pending_confirmation(self):
+        return bool(self.proof.pending)
+
     def preflight(self):
         self.proof.preflight()
         # Event-Based OFF, move/rotate reset flags and Point configuration still

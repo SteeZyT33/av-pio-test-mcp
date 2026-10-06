@@ -76,6 +76,11 @@ native scope check. The following general preparation steps alone cannot enable
 this adapter. Native plugin credentials or operator enablement are an additional
 VW2026 prerequisite; this repository does not forge credentials or change security
 settings. Review the internal source/build manifest before installing anything.
+Also create the fixed Python **AV PIO Test Operator** menu from its review
+template and add native **Enable PIO Testing**, **Disable PIO Testing** and
+**PIO Testing Status** commands to a development workspace. See
+[OPERATOR_CONTROLS.md](OPERATOR_CONTROLS.md). Startup is OFF; initialization runs
+through local Enable before any pump. A reconnect never enables or arms.
 
 1. The user creates/maintains **AV Post and AV Callout native definitions locally**
    with the existing private AV bootstrap/hot reload. Nothing here installs,
@@ -119,6 +124,15 @@ names/credential files separately. No native binary is included in this draft,
 and no existing upstream binary should be downloaded or reused.
 
 ## Explicit recovery and removal — preserve user files/settings
+
+Temporary stop: select **Disable PIO Testing**, then confirm **OFF** after any
+executing call returns. Preserve drawings/objects and uncertain evidence. This
+does not uninstall anything. Client relaunch cannot bypass the native gate.
+
+Removal additionally includes only the specifically installed new native
+`AVPIOTestObserver.vlb/.vwr`, the user-created `AV PIO Test Operator` menu file and
+the four new native workspace entries, with VW closed manually. Never remove the
+whole Plug-ins directory, original workspace, AV definitions or credentials.
 
 - On an ambiguous timeout, **do not retry**. Stop the MCP process, wait for VW to
   return (or review its crash), and inspect the disposable drawing manually. Do

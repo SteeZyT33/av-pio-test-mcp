@@ -88,3 +88,26 @@ are committed here. No observer install/load or native acceptance occurred.
 Synthetic host-contract tests prove rejection and two-phase response behavior;
 they do not prove SDK callback delivery, nested menu execution, native regeneration,
 geometry semantics, performance or grip behavior. Those remain explicit live gates.
+
+## Local OFF-control and lazy-observer follow-up
+
+The complete Windows suite now runs **98 tests: 97 pass, one POSIX-only skip**
+under the machine's actual default TEMP directory, with resolved containment
+checked before recursive temporary cleanup. The test-only fixture base resolves
+short Windows path aliases; the test-created `result.json` symlink is unlinked in
+`finally` after the same REPARSE rejection assertion. Runtime path/DACL protection
+is unchanged. Python 3.9 grammar still passes; no native VW was used.
+
+Coverage includes default OFF, READY versus explicit ARMED, queued disable before
+claim, epoch invalidation after re-enable, client/server reconnect, bridge restart,
+document generation, broken IPC authentication, unresolved claimed-job shutdown,
+pending reset uncertainty and disable during a blocked operation without rollback.
+Last-published OFF status is explicitly distinguished from live native verification.
+
+All four C++17 policy tests compile/run under MSVC /W4 /WX with assertions enabled:
+document lifetime, menu lifecycle, native operator gate, and deferred registration.
+The actual private observer uses those gate/deferred-registration classes and
+compiles against the pinned official SDK2026. Extension construction does not
+start callbacks; explicit local Enable activates them while OFF, with rollback
+and active teardown. Private source assertions/build/resource hashes are retained
+in the local manifest. No observer install/load or PIO acceptance is claimed.
